@@ -14,8 +14,15 @@ fn grams_per_mm(diameter_mm: f64, density_g_per_cm3: f64) -> f64 {
 
 /// Weight in grams of a length of filament.
 ///
-/// TODO: add an `# Examples` section here with a doc test. `cargo test` runs
-/// the code in it, so the example in the documentation can never go stale.
+/// # Examples
+///
+/// ```
+/// use lesson_10_test_frameworks::filament_grams;
+///
+/// // One metre of 1.75 mm PLA weighs about 3 g.
+/// let grams = filament_grams(1000.0, 1.75, 1.24);
+/// assert!((grams - 2.98).abs() < 0.01);
+/// ```
 pub fn filament_grams(length_mm: f64, diameter_mm: f64, density_g_per_cm3: f64) -> f64 {
     length_mm * grams_per_mm(diameter_mm, density_g_per_cm3)
 }
@@ -43,6 +50,41 @@ mod tests {
         assert_close(2.98, filament_grams(1000.0, 1.75, 1.24), 0.01);
     }
 
-    // TODO: port the rest of lesson 01's tests (lessons/01-filament-math/rust/tests/filament.rs).
-    // Add one test that checks the private grams_per_mm directly.
+    #[test]
+    fn a_metre_of_filament_weighs() {
+        let cases = [
+            ("1.75 mm PLA", 1.75, 1.24, 2.98),
+            ("2.85 mm PLA", 2.85, 1.24, 7.91),
+            ("1.75 mm PETG", 1.75, 1.27, 3.05),
+        ];
+        for (name, diameter_mm, density, grams) in cases {
+            let actual = filament_grams(1000.0, diameter_mm, density);
+            assert!(
+                (actual - grams).abs() <= 0.01,
+                "{name}: expected {grams}, got {actual}"
+            );
+        }
+    }
+
+    #[test]
+    fn zero_length_weighs_nothing() {
+        assert_close(0.0, filament_grams(0.0, 1.75, 1.24), 0.01);
+    }
+
+    #[test]
+    fn a_1_kg_spool_of_pla_holds_about_335_m() {
+        assert_close(335_280.0, filament_length_mm(1000.0, 1.75, 1.24), 50.0);
+    }
+
+    #[test]
+    fn length_and_weight_convert_back_and_forth() {
+        let grams = filament_grams(4200.0, 1.75, 1.24);
+        assert_close(4200.0, filament_length_mm(grams, 1.75, 1.24), 0.01);
+    }
+
+    #[test]
+    fn a_millimetre_of_1_75_mm_pla_weighs_about_3_mg() {
+        // grams_per_mm is private: only a unit test in this file can call it.
+        assert_close(0.002_98, grams_per_mm(1.75, 1.24), 0.000_01);
+    }
 }
