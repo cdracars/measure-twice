@@ -1,0 +1,15 @@
+{
+    "name": "measure-twice/lesson-10-test-frameworks",
+    "description": "Lesson 10: lesson 01's tests on PHPUnit.",
+    "type": "project",
+    "license": "MIT",
+    "require": {
+        "php": ">=8.4.1"
+    },
+    "autoload": {
+        "files": ["src/filament.php"]
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^13.4"
+    }
+}

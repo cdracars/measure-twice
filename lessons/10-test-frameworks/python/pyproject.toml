@@ -1,0 +1,12 @@
+[project]
+name = "lesson-10-test-frameworks"
+version = "0.1.0"
+description = "Lesson 10: lesson 01's tests on pytest."
+requires-python = ">=3.12"
+dependencies = []
+
+[dependency-groups]
+dev = ["pytest>=9.1"]
+
+[tool.pytest.ini_options]
+addopts = "-p no:cacheprovider"
