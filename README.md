@@ -100,13 +100,17 @@ checks they're installed. Then it shows your current step, and every time you
 save a file it re-runs that step's tests and shows what failed: expected,
 got, and where. When the step passes, it moves you on.
 
-Keep it running in a terminal next to your editor; any editor works. While
-it's running, type a letter and press Enter:
+Keep it running in a terminal next to your editor; any editor works. In VS
+Code's terminal, including a Codespace, each new step opens the lesson README
+and the file you edit for you. Elsewhere, the guide prints their paths. To
+stop it opening files, run `./scripts/guide --no-open` or set
+`GUIDE_NO_OPEN=1`. While it's running, type a letter and press Enter:
 
 | Key | Does |
 | --- | --- |
 | `h` | Show the next hint. Each step has three, from a nudge to nearly the answer. |
 | `e` | Open the file you edit, in `$EDITOR` or VS Code |
+| `r` | Open the lesson README, which explains the problem, in `$EDITOR` or VS Code |
 | `o` | Show the full test output |
 | `d` | Confirm a checklist step, such as a refactor |
 | `q` | Quit. Your progress is saved. |

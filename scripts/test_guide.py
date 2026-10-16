@@ -1,8 +1,11 @@
 """Tests for the guide. Run: python3 -m unittest discover -s scripts"""
 
+import os
+import subprocess
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 import guide
 from guide import Exercise, Progress, TestResult
@@ -371,6 +374,94 @@ class LessonFilesTest(unittest.TestCase):
                 for hint in e.hints:
                     for language in guide.LANGUAGES:
                         self.assertTrue(guide.hint_text(hint, language))
+
+
+PHP_FILES = {"php": {"edit": "php/filament.php", "tests": "php/test.php"}}
+IN_VSCODE = {"TERM_PROGRAM": "vscode"}
+
+
+class OpenLessonFilesTest(unittest.TestCase):
+    """Opening the lesson README and the file to edit in VS Code, with `code` mocked."""
+
+    lesson_dir = guide.ROOT / "lessons" / "01-filament-math"
+
+    def setUp(self):
+        temp = tempfile.TemporaryDirectory()
+        self.addCleanup(temp.cleanup)
+        patches = [
+            mock.patch.object(guide, "PROGRESS_FILE", Path(temp.name) / "progress.json"),
+            mock.patch.object(guide, "ensure_ready", return_value=True),
+            mock.patch.object(guide, "clear_screen"),
+            mock.patch.object(guide, "wait_until_quiet", side_effect=lambda _l, _g, f: f),
+            mock.patch.object(guide.shutil, "which", return_value="/usr/bin/code"),
+            mock.patch.object(
+                guide.subprocess, "run", return_value=subprocess.CompletedProcess([], 0)
+            ),
+            mock.patch("builtins.print"),
+        ]
+        for patch in patches:
+            patch.start()
+            self.addCleanup(patch.stop)
+        self.code = guide.subprocess.run
+
+    def watch(self, keys, saves=1, open_files=True, env=None) -> int:
+        """Run the watch loop on one failing step, with `saves` saves; returns the test runs."""
+        mtimes = iter([{Path("f"): n} for n in range(saves)] + [{Path("f"): saves - 1}] * 99)
+        with (
+            mock.patch.dict(os.environ, env if env is not None else IN_VSCODE, clear=True),
+            mock.patch.object(guide, "watched_files", side_effect=lambda _l, _g: next(mtimes)),
+            mock.patch.object(
+                guide, "run_tests", return_value=([TestResult("zero length", False)], "")
+            ) as run_tests,
+            mock.patch.object(guide, "read_key", side_effect=[*keys, "q"]),
+        ):
+            guide.watch([exercise(files=PHP_FILES)], Progress(languages=["php"]), open_files)
+        return run_tests.call_count
+
+    def code_calls(self) -> list[list[str]]:
+        return [c.args[0] for c in self.code.call_args_list if c.args[0][0] == "code"]
+
+    def test_a_step_opens_the_lesson_readme_and_the_file_to_edit(self):
+        self.watch([])
+        readme, stub = self.lesson_dir / "README.md", self.lesson_dir / "php/filament.php"
+        self.assertEqual([["code", "--reuse-window", str(readme), str(stub)]], self.code_calls())
+
+    def test_saving_re_runs_the_tests_without_opening_the_files_again(self):
+        self.assertEqual(3, self.watch([None, None], saves=3))
+        self.assertEqual(1, len(self.code_calls()))
+
+    def test_nothing_opens_outside_vscodes_terminal(self):
+        self.watch([], env={})
+        self.assertEqual([], self.code_calls())
+
+    def test_guide_no_open_turns_it_off(self):
+        self.watch([], env={**IN_VSCODE, "GUIDE_NO_OPEN": "1"})
+        self.assertEqual([], self.code_calls())
+
+    def test_the_no_open_flag_turns_it_off(self):
+        with mock.patch.object(guide, "watch", return_value=0) as watch:
+            guide.main(["--no-open"])
+        self.assertFalse(watch.call_args.args[2])
+
+    def test_r_opens_the_lesson_readme_like_e_opens_the_file(self):
+        with mock.patch.object(guide, "open_in_editor") as open_in_editor:
+            self.watch(["r", "e"])
+        self.assertEqual(
+            [
+                mock.call(self.lesson_dir / "README.md"),
+                mock.call(self.lesson_dir / "php/filament.php"),
+            ],
+            open_in_editor.call_args_list,
+        )
+
+    def test_a_code_command_that_fails_to_start_is_not_an_error(self):
+        self.code.side_effect = OSError("no such file")
+        self.assertFalse(guide.open_in_vscode([self.lesson_dir / "README.md"]))
+
+    def test_a_lesson_without_files_opens_just_the_readme(self):
+        self.assertEqual(
+            [self.lesson_dir / "README.md"], guide.lesson_files(exercise(files={}), "php")
+        )
 
 
 if __name__ == "__main__":
