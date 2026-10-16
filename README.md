@@ -63,6 +63,10 @@ git switch -c my-work          # keep your answers on your own branch
 `npm install` is only needed for the TypeScript type checker (`npm run
 typecheck`). Running the TypeScript tests needs nothing but Node.
 
+Stage 1 needs only the four languages. From stage 2, lessons use real test and
+web frameworks and need PHP 8.4.1+; each lesson lists what to install. See
+[ADR 0003](docs/adr/0003-realistic-tools-from-stage-2.md).
+
 ## Running the tests
 
 ```sh

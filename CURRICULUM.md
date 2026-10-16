@@ -89,7 +89,9 @@ You learn these by working inside them, not by reading about them:
 
 - CI on every push: formatting, linting, and type checks everywhere; tests on
   every branch except `main` ([ADR 0002](docs/adr/0002-solutions-on-a-branch.md))
-- Built-in tools only ([ADR 0001](docs/adr/0001-built-in-tools-only.md))
+- Built-in tools only in stage 1 ([ADR 0001](docs/adr/0001-built-in-tools-only.md));
+  realistic, small frameworks from stage 2 on
+  ([ADR 0003](docs/adr/0003-realistic-tools-from-stage-2.md))
 - Decisions recorded as ADRs in `docs/adr/`
 - Shared vocabulary in [GLOSSARY.md](GLOSSARY.md)
 - Later: conventional commits, a dev container, pre-commit hooks
