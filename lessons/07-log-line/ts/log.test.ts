@@ -46,4 +46,31 @@ describe("parseEntry", () => {
       value: { date: "2026-10-17", text: "raised Z offset" },
     });
   });
+
+  test("a colon inside the text is kept", () => {
+    const result = parseEntry("2026-10-18: note: PETG strings");
+    assert.ok(result.ok);
+    assert.equal(result.value.text, "note: PETG strings");
+  });
+
+  test("format undoes parse", () => {
+    const line = "2026-10-18: note: PETG strings above 245 °C";
+    const result = parseEntry(line);
+    assert.ok(result.ok);
+    assert.equal(formatEntry(result.value), line);
+  });
+
+  test("a line without a colon is missing its separator", () => {
+    assert.deepEqual(parseEntry("2026-10-16 replaced nozzle"), { ok: false, error: "missing separator" });
+  });
+
+  for (const date of ["16/10/2026", "2026-13-01", "2026-00-10", "2026-10-32", "2026-10-00", "2026-1-5", ""]) {
+    test(`${JSON.stringify(date)} is a bad date`, () => {
+      assert.deepEqual(parseEntry(`${date}: replaced nozzle`), { ok: false, error: "bad date" });
+    });
+  }
+
+  test("blank text is empty", () => {
+    assert.deepEqual(parseEntry("2026-10-16:   "), { ok: false, error: "empty text" });
+  });
 });

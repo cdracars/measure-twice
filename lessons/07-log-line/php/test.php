@@ -86,6 +86,30 @@ test('parse ignores surrounding spaces', function () {
     assert_same('raised Z offset', $entry->text);
 });
 
+test('a colon inside the text is kept', function () {
+    assert_same('note: PETG strings', parse_entry('2026-10-18: note: PETG strings')->text);
+});
+
+test('format undoes parse', function () {
+    $line = '2026-10-18: note: PETG strings above 245 °C';
+    assert_same($line, format_entry(parse_entry($line)));
+});
+
+test('a line without a colon is missing its separator', function () {
+    assert_throws(MissingSeparator::class, fn () => parse_entry('2026-10-16 replaced nozzle'));
+});
+
+$badDates = ['16/10/2026', '2026-13-01', '2026-00-10', '2026-10-32', '2026-10-00', '2026-1-5', ''];
+foreach ($badDates as $date) {
+    test("'{$date}' is a bad date", function () use ($date) {
+        assert_throws(BadDate::class, fn () => parse_entry("{$date}: replaced nozzle"));
+    });
+}
+
+test('blank text is empty', function () {
+    assert_throws(EmptyText::class, fn () => parse_entry('2026-10-16:   '));
+});
+
 if ($failures > 0) {
     echo "\n{$failures} failed\n";
     exit(1);

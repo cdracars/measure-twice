@@ -1,3 +1,4 @@
+import re
 from dataclasses import dataclass
 
 
@@ -31,17 +32,35 @@ def parse_entry(line: str) -> LogEntry:
 
     Raises an InvalidLogLine subclass if the line isn't valid.
     """
-    # TODO: write the error tests in test_log.py first, then replace this line.
-    raise NotImplementedError("TODO: implement parse_entry")
+    date, separator, text = line.partition(":")
+    if not separator:
+        raise MissingSeparator(f"no ':' in {line!r}")
+
+    date, text = date.strip(), text.strip()
+    if not _is_valid_date(date):
+        raise BadDate(f"not a YYYY-MM-DD date: {date!r}")
+    if not text:
+        raise EmptyText(f"no text after the date in {line!r}")
+    return LogEntry(date, text)
+
+
+def _is_valid_date(date: str) -> bool:
+    """Whether a string looks like YYYY-MM-DD. Checks the shape, not the calendar."""
+    match = re.fullmatch(r"\d{4}-(\d{2})-(\d{2})", date)
+    if match is None:
+        return False
+    month, day = int(match[1]), int(match[2])
+    return 1 <= month <= 12 and 1 <= day <= 31
 
 
 def format_entry(entry: LogEntry) -> str:
     """The line for an entry: "YYYY-MM-DD: text"."""
-    # TODO: replace this line with your implementation.
-    raise NotImplementedError("TODO: implement format_entry")
+    return f"{entry.date}: {entry.text}"
 
 
 def truncate(text: str, max_chars: int) -> str:
     """The text if it has at most max_chars characters, otherwise its first
     max_chars characters followed by "…"."""
-    raise NotImplementedError("TODO: implement truncate")
+    if len(text) <= max_chars:
+        return text
+    return text[:max_chars] + "…"

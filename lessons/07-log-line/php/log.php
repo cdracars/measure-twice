@@ -37,8 +37,34 @@ final class EmptyText extends InvalidLogLine
  */
 function parse_entry(string $line): LogEntry
 {
-    // TODO: write the error tests in test.php first, then replace this line.
-    throw new RuntimeException('TODO: implement parse_entry');
+    $parts = explode(':', $line, 2);
+    if (count($parts) < 2) {
+        throw new MissingSeparator("no ':' in '{$line}'");
+    }
+
+    [$date, $text] = array_map('trim', $parts);
+    if (!is_valid_date($date)) {
+        throw new BadDate("not a YYYY-MM-DD date: '{$date}'");
+    }
+    if ($text === '') {
+        throw new EmptyText("no text after the date in '{$line}'");
+    }
+
+    return new LogEntry($date, $text);
+}
+
+/**
+ * Whether a string looks like YYYY-MM-DD. Checks the shape, not the calendar.
+ */
+function is_valid_date(string $date): bool
+{
+    if (preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $date, $matches) !== 1) {
+        return false;
+    }
+    $month = (int) $matches[2];
+    $day = (int) $matches[3];
+
+    return $month >= 1 && $month <= 12 && $day >= 1 && $day <= 31;
 }
 
 /**
@@ -46,8 +72,7 @@ function parse_entry(string $line): LogEntry
  */
 function format_entry(LogEntry $entry): string
 {
-    // TODO: replace this line with your implementation.
-    throw new RuntimeException('TODO: implement format_entry');
+    return "{$entry->date}: {$entry->text}";
 }
 
 /**
@@ -56,5 +81,9 @@ function format_entry(LogEntry $entry): string
  */
 function truncate(string $text, int $maxChars): string
 {
-    throw new RuntimeException('TODO: implement truncate');
+    if (mb_strlen($text) <= $maxChars) {
+        return $text;
+    }
+
+    return mb_substr($text, 0, $maxChars) . '…';
 }

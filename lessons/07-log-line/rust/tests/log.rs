@@ -1,4 +1,4 @@
-use lesson_07_log_line::{LogEntry, format_entry, parse_entry, truncate};
+use lesson_07_log_line::{LogEntry, LogLineError, format_entry, parse_entry, truncate};
 
 fn entry(date: &str, text: &str) -> LogEntry {
     LogEntry {
@@ -60,4 +60,48 @@ fn parse_ignores_surrounding_spaces() {
         parse_entry("  2026-10-17 :   raised Z offset  "),
         Ok(entry("2026-10-17", "raised Z offset"))
     );
+}
+
+#[test]
+fn a_colon_inside_the_text_is_kept() {
+    let parsed = parse_entry("2026-10-18: note: PETG strings").unwrap();
+    assert_eq!(parsed.text, "note: PETG strings");
+}
+
+#[test]
+fn format_undoes_parse() {
+    let line = "2026-10-18: note: PETG strings above 245 °C";
+    assert_eq!(format_entry(&parse_entry(line).unwrap()), line);
+}
+
+#[test]
+fn a_line_without_a_colon_is_missing_its_separator() {
+    assert_eq!(
+        parse_entry("2026-10-16 replaced nozzle"),
+        Err(LogLineError::MissingSeparator)
+    );
+}
+
+#[test]
+fn bad_dates() {
+    for date in [
+        "16/10/2026",
+        "2026-13-01",
+        "2026-00-10",
+        "2026-10-32",
+        "2026-10-00",
+        "2026-1-5",
+        "",
+    ] {
+        assert_eq!(
+            parse_entry(&format!("{date}: replaced nozzle")),
+            Err(LogLineError::BadDate),
+            "{date:?}"
+        );
+    }
+}
+
+#[test]
+fn blank_text_is_empty() {
+    assert_eq!(parse_entry("2026-10-16:   "), Err(LogLineError::EmptyText));
 }
