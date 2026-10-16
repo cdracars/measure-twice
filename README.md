@@ -49,8 +49,13 @@ lesson.
 Click the badge to open the course in a GitHub Codespace: VS Code in your
 browser with PHP 8.4, Python, Node.js, Rust, Composer and uv already set up.
 The first start takes a few minutes while it builds; after that, open a
-terminal and run `./scripts/guide`. GitHub's free plan includes some Codespaces
-hours each month.
+terminal and run `./scripts/guide`.
+
+The codespace runs on your own GitHub account, not the course's: GitHub's
+"paid for by" notice will show your username. It comes out of your account's
+free monthly Codespaces allowance, and with GitHub's default $0 spending limit
+it stops when that runs out rather than charging you. Stop or delete the
+codespace when you're done to make the allowance last.
 
 The same setup runs on your own machine with VS Code's Dev Containers
 extension and Docker: open the folder, then choose *Reopen in Container*. The
