@@ -47,6 +47,18 @@ class HeaviestJobTest(unittest.TestCase):
         assert job is not None  # tells the type checker too
         self.assertEqual("vase", job.name)
 
+    def test_no_jobs_means_no_heaviest_job(self):
+        self.assertIsNone(heaviest_job([]))
+
+    def test_the_first_of_two_equally_heavy_jobs_wins(self):
+        jobs = [
+            Job("left bracket", Material.PETG, 40.0),
+            Job("right bracket", Material.PETG, 40.0),
+        ]
+        job = heaviest_job(jobs)
+        assert job is not None
+        self.assertEqual("left bracket", job.name)
+
 
 if __name__ == "__main__":
     unittest.main()

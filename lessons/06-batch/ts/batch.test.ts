@@ -54,4 +54,16 @@ describe("heaviestJob", () => {
   test("the heaviest job in the batch", () => {
     assert.equal(heaviestJob(fridayQueue())?.name, "vase");
   });
+
+  test("no jobs means no heaviest job", () => {
+    assert.equal(heaviestJob([]), undefined);
+  });
+
+  test("the first of two equally heavy jobs wins", () => {
+    const jobs: Job[] = [
+      { name: "left bracket", material: "PETG", grams: 40 },
+      { name: "right bracket", material: "PETG", grams: 40 },
+    ];
+    assert.equal(heaviestJob(jobs)?.name, "left bracket");
+  });
 });

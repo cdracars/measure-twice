@@ -76,6 +76,18 @@ test('the heaviest job in the batch', function () {
     assert_same('vase', heaviest_job(friday_queue())?->name);
 });
 
+test('no jobs means no heaviest job', function () {
+    assert_same(null, heaviest_job([]));
+});
+
+test('the first of two equally heavy jobs wins', function () {
+    $jobs = [
+        new Job('left bracket', Material::PETG, 40.0),
+        new Job('right bracket', Material::PETG, 40.0),
+    ];
+    assert_same('left bracket', heaviest_job($jobs)?->name);
+});
+
 if ($failures > 0) {
     echo "\n{$failures} failed\n";
     exit(1);

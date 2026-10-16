@@ -17,21 +17,23 @@ class Job:
 
 
 def total_grams(jobs: list[Job]) -> float:
-    # TODO: replace this line with your implementation.
-    raise NotImplementedError("TODO: implement total_grams")
+    return sum(job.grams for job in jobs)
 
 
 def grams_by_material(jobs: list[Job]) -> dict[Material, float]:
     """Total grams per material, for the materials that appear."""
-    raise NotImplementedError("TODO: implement grams_by_material")
+    totals: dict[Material, float] = {}
+    for job in jobs:
+        totals[job.material] = totals.get(job.material, 0.0) + job.grams
+    return totals
 
 
 def heaviest_job(jobs: list[Job]) -> Job | None:
     """The job with the most grams, or None if there are none. The first wins ties."""
-    # TODO: write the tests in test_batch.py first, then replace this line.
-    raise NotImplementedError("TODO: implement heaviest_job")
+    # max() returns the first of several equal items.
+    return max(jobs, key=lambda job: job.grams, default=None)
 
 
 def jobs_using(jobs: list[Job], material: Material) -> list[str]:
     """Names of the jobs using a material, in their original order."""
-    raise NotImplementedError("TODO: implement jobs_using")
+    return [job.name for job in jobs if job.material is material]

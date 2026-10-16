@@ -25,8 +25,7 @@ final readonly class Job
  */
 function total_grams(array $jobs): float
 {
-    // TODO: replace this line with your implementation.
-    throw new RuntimeException('TODO: implement total_grams');
+    return array_sum(array_map(fn (Job $job) => $job->grams, $jobs));
 }
 
 /**
@@ -37,7 +36,13 @@ function total_grams(array $jobs): float
  */
 function grams_by_material(array $jobs): array
 {
-    throw new RuntimeException('TODO: implement grams_by_material');
+    $totals = [];
+    foreach ($jobs as $job) {
+        $key = $job->material->value;
+        $totals[$key] = ($totals[$key] ?? 0.0) + $job->grams;
+    }
+
+    return $totals;
 }
 
 /**
@@ -47,8 +52,15 @@ function grams_by_material(array $jobs): array
  */
 function heaviest_job(array $jobs): ?Job
 {
-    // TODO: write the tests in test.php first, then replace this line.
-    throw new RuntimeException('TODO: implement heaviest_job');
+    $heaviest = null;
+    foreach ($jobs as $job) {
+        // Strictly greater, so the first of several equal jobs stays.
+        if ($heaviest === null || $job->grams > $heaviest->grams) {
+            $heaviest = $job;
+        }
+    }
+
+    return $heaviest;
 }
 
 /**
@@ -59,5 +71,8 @@ function heaviest_job(array $jobs): ?Job
  */
 function jobs_using(array $jobs, Material $material): array
 {
-    throw new RuntimeException('TODO: implement jobs_using');
+    $using = array_filter($jobs, fn (Job $job) => $job->material === $material);
+
+    // array_filter keeps the original keys; array_values renumbers from 0.
+    return array_values(array_map(fn (Job $job) => $job->name, $using));
 }

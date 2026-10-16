@@ -23,22 +23,34 @@ pub struct Job {
 }
 
 pub fn total_grams(jobs: &[Job]) -> f64 {
-    // TODO: replace this line with your implementation.
-    todo!("total_grams of {} jobs", jobs.len())
+    jobs.iter().map(|job| job.grams).sum()
 }
 
 /// Total grams per material, for the materials that appear.
 pub fn grams_by_material(jobs: &[Job]) -> HashMap<Material, f64> {
-    todo!("grams_by_material of {} jobs", jobs.len())
+    let mut totals = HashMap::new();
+    for job in jobs {
+        *totals.entry(job.material).or_insert(0.0) += job.grams;
+    }
+    totals
 }
 
 /// The job with the most grams, or `None` if there are none. The first wins ties.
 pub fn heaviest_job(jobs: &[Job]) -> Option<&Job> {
-    // TODO: write the tests in tests/batch.rs first, then replace this line.
-    todo!("heaviest_job of {} jobs", jobs.len())
+    // Not `max_by`: it returns the *last* of several equal items.
+    let mut heaviest: Option<&Job> = None;
+    for job in jobs {
+        if heaviest.is_none_or(|h| job.grams > h.grams) {
+            heaviest = Some(job);
+        }
+    }
+    heaviest
 }
 
 /// Names of the jobs using a material, in their original order.
 pub fn jobs_using(jobs: &[Job], material: Material) -> Vec<&str> {
-    todo!("jobs_using {material:?} of {} jobs", jobs.len())
+    jobs.iter()
+        .filter(|job| job.material == material)
+        .map(|job| job.name.as_str())
+        .collect()
 }

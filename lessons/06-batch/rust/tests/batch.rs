@@ -71,3 +71,20 @@ fn the_heaviest_job_in_the_batch() {
     let jobs = friday_queue();
     assert_eq!(heaviest_job(&jobs).map(|j| j.name.as_str()), Some("vase"));
 }
+
+#[test]
+fn no_jobs_means_no_heaviest_job() {
+    assert_eq!(heaviest_job(&[]), None);
+}
+
+#[test]
+fn the_first_of_two_equally_heavy_jobs_wins() {
+    let jobs = [
+        job("left bracket", Material::Petg, 40.0),
+        job("right bracket", Material::Petg, 40.0),
+    ];
+    assert_eq!(
+        heaviest_job(&jobs).map(|j| j.name.as_str()),
+        Some("left bracket")
+    );
+}
