@@ -5,6 +5,8 @@ Date: 2026-10-16
 ## Status
 
 Accepted. Narrows [ADR 0001](0001-built-in-tools-only.md) to stage 1.
+Amended the same day, before any stage 2 lesson existed: FastAPI replaces
+Flask.
 
 ## Context
 
@@ -30,13 +32,14 @@ small, widely used tools:
 | --- | --- | --- | --- | --- |
 | Tests | PHPUnit | pytest | Vitest | `cargo test` |
 | Packages | Composer | uv | npm | cargo |
-| Web | Slim | Flask | React + Vite | axum + askama |
+| Web | Slim | FastAPI + Jinja2 | React + Vite | axum + askama |
 | Database | PDO + SQLite | `sqlite3` (standard library) | better-sqlite3 | rusqlite |
 
 Latest stable versions when this was written, all released in 2026:
-PHPUnit 13.4, Slim 4.15, pytest 9.1, Flask 3.1, uv 0.13, Vitest 5.0,
+PHPUnit 13.4, Slim 4.15, pytest 9.1, FastAPI 0.143, uv 0.13, Vitest 5.0,
 Vite 8.3, React 19.3, better-sqlite3 13.0, axum 0.8, askama 0.16,
-rusqlite 0.40.
+rusqlite 0.40. Jinja2 3.1.6 (March 2025) and Uvicorn 0.54 (FastAPI's
+usual server) come with FastAPI.
 
 - Dependencies are pinned with lockfiles (`composer.lock`, `uv.lock`,
   `package-lock.json`, `Cargo.lock`) and updated deliberately.
@@ -56,3 +59,11 @@ rusqlite 0.40.
   versions and record changes here or in a new ADR.
 - maud was considered for Rust templates. It was not chosen because it had
   no release since February 2025; askama is more actively released.
+- Jinja2's latest release is also from 2025. It is kept anyway: it is the
+  standard Python template engine, maintained by the Pallets project, and
+  mature enough that infrequent releases are expected. Release dates are one
+  signal, not the rule.
+- FastAPI was chosen over Flask for its type-driven request validation
+  (Pydantic), which pairs with the course's focus on types and modeling. It
+  also raises an architecture question worth a lesson: Pydantic models are
+  convenient, but they belong at the HTTP edge, not in the domain.
