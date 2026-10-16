@@ -6,22 +6,53 @@ export type Material = (typeof MATERIALS)[number];
 
 export type Verdict = "too cold" | "ok" | "too hot";
 
+/**
+ * Fails to type-check if a switch forgot a case: only `never` is assignable
+ * to `never`, and `material` is only `never` once every case is handled.
+ */
+function unreachable(value: never): never {
+  throw new Error(`unhandled case: ${String(value)}`);
+}
+
 /** Density in g/cm³. */
 export function density(material: Material): number {
-  // TODO: replace this line with your implementation.
-  throw new Error("TODO: implement density");
+  switch (material) {
+    case "PLA":
+      return 1.24;
+    case "PETG":
+      return 1.27;
+    case "ABS":
+      return 1.04;
+    case "TPU":
+      return 1.21;
+    default:
+      return unreachable(material);
+  }
 }
 
 /** Nozzle temperature range in °C, as [min, max]. */
 export function nozzleRange(material: Material): readonly [number, number] {
-  throw new Error("TODO: implement nozzleRange");
+  switch (material) {
+    case "PLA":
+      return [190, 220];
+    case "PETG":
+      return [220, 250];
+    case "ABS":
+      return [230, 260];
+    case "TPU":
+      return [210, 230];
+    default:
+      return unreachable(material);
+  }
 }
 
 export function needsEnclosure(material: Material): boolean {
-  throw new Error("TODO: implement needsEnclosure");
+  return material === "ABS";
 }
 
 export function nozzleVerdict(material: Material, nozzleC: number): Verdict {
-  // TODO: write the boundary tests in material.test.ts first, then replace this line.
-  throw new Error("TODO: implement nozzleVerdict");
+  const [min, max] = nozzleRange(material);
+  if (nozzleC < min) return "too cold";
+  if (nozzleC > max) return "too hot";
+  return "ok";
 }

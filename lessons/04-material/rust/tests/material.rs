@@ -48,3 +48,24 @@ fn no_other_material_needs_an_enclosure() {
 fn pla_in_the_middle_of_its_range_is_ok() {
     assert_eq!(nozzle_verdict(Material::Pla, 205), Verdict::Ok);
 }
+
+#[test]
+fn boundaries() {
+    let cases = [
+        (Material::Pla, 189, Verdict::TooCold),
+        (Material::Pla, 190, Verdict::Ok),
+        (Material::Pla, 220, Verdict::Ok),
+        (Material::Pla, 221, Verdict::TooHot),
+        (Material::Abs, 229, Verdict::TooCold),
+        (Material::Abs, 230, Verdict::Ok),
+        (Material::Abs, 260, Verdict::Ok),
+        (Material::Abs, 261, Verdict::TooHot),
+    ];
+    for (material, nozzle_c, expected) in cases {
+        assert_eq!(
+            nozzle_verdict(material, nozzle_c),
+            expected,
+            "{material:?} at {nozzle_c}"
+        );
+    }
+}

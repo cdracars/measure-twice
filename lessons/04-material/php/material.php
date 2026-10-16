@@ -12,8 +12,12 @@ enum Material: string
     /** Density in g/cm³. */
     public function density(): float
     {
-        // TODO: replace this line with your implementation.
-        throw new RuntimeException('TODO: implement Material::density');
+        return match ($this) {
+            Material::PLA => 1.24,
+            Material::PETG => 1.27,
+            Material::ABS => 1.04,
+            Material::TPU => 1.21,
+        };
     }
 
     /**
@@ -23,12 +27,17 @@ enum Material: string
      */
     public function nozzleRange(): array
     {
-        throw new RuntimeException('TODO: implement Material::nozzleRange');
+        return match ($this) {
+            Material::PLA => [190, 220],
+            Material::PETG => [220, 250],
+            Material::ABS => [230, 260],
+            Material::TPU => [210, 230],
+        };
     }
 
     public function needsEnclosure(): bool
     {
-        throw new RuntimeException('TODO: implement Material::needsEnclosure');
+        return $this === Material::ABS;
     }
 }
 
@@ -41,6 +50,11 @@ enum Verdict
 
 function nozzle_verdict(Material $material, int $nozzleC): Verdict
 {
-    // TODO: write the boundary tests in test.php first, then replace this line.
-    throw new RuntimeException('TODO: implement nozzle_verdict');
+    [$min, $max] = $material->nozzleRange();
+
+    return match (true) {
+        $nozzleC < $min => Verdict::TooCold,
+        $nozzleC > $max => Verdict::TooHot,
+        default => Verdict::Ok,
+    };
 }

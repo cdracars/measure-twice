@@ -45,4 +45,20 @@ describe("nozzleVerdict", () => {
   test("PLA in the middle of its range is OK", () => {
     assert.equal(nozzleVerdict("PLA", 205), "ok");
   });
+
+  const boundaries = [
+    ["PLA", 189, "too cold"],
+    ["PLA", 190, "ok"],
+    ["PLA", 220, "ok"],
+    ["PLA", 221, "too hot"],
+    ["ABS", 229, "too cold"],
+    ["ABS", 230, "ok"],
+    ["ABS", 260, "ok"],
+    ["ABS", 261, "too hot"],
+  ] as const;
+  for (const [material, nozzleC, expected] of boundaries) {
+    test(`${material} at ${nozzleC} °C is ${expected}`, () => {
+      assert.equal(nozzleVerdict(material, nozzleC), expected);
+    });
+  }
 });

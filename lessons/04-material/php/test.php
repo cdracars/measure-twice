@@ -71,6 +71,22 @@ test('PLA in the middle of its range is OK', function () {
     assert_same(Verdict::Ok, nozzle_verdict(Material::PLA, 205));
 });
 
+$boundaries = [
+    [Material::PLA, 189, Verdict::TooCold],
+    [Material::PLA, 190, Verdict::Ok],
+    [Material::PLA, 220, Verdict::Ok],
+    [Material::PLA, 221, Verdict::TooHot],
+    [Material::ABS, 229, Verdict::TooCold],
+    [Material::ABS, 230, Verdict::Ok],
+    [Material::ABS, 260, Verdict::Ok],
+    [Material::ABS, 261, Verdict::TooHot],
+];
+foreach ($boundaries as [$material, $nozzleC, $expected]) {
+    test("{$material->name} at {$nozzleC} °C is {$expected->name}", function () use ($material, $nozzleC, $expected) {
+        assert_same($expected, nozzle_verdict($material, $nozzleC));
+    });
+}
+
 if ($failures > 0) {
     echo "\n{$failures} failed\n";
     exit(1);

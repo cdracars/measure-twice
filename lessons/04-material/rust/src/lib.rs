@@ -22,17 +22,26 @@ impl Material {
 
     /// Density in g/cm³.
     pub fn density(self) -> f64 {
-        // TODO: replace this line with your implementation.
-        todo!("Material::density for {self:?}")
+        match self {
+            Material::Pla => 1.24,
+            Material::Petg => 1.27,
+            Material::Abs => 1.04,
+            Material::Tpu => 1.21,
+        }
     }
 
     /// Nozzle temperature range in °C, as (min, max).
     pub fn nozzle_range(self) -> (i32, i32) {
-        todo!("Material::nozzle_range for {self:?}")
+        match self {
+            Material::Pla => (190, 220),
+            Material::Petg => (220, 250),
+            Material::Abs => (230, 260),
+            Material::Tpu => (210, 230),
+        }
     }
 
     pub fn needs_enclosure(self) -> bool {
-        todo!("Material::needs_enclosure for {self:?}")
+        self == Material::Abs
     }
 }
 
@@ -44,6 +53,12 @@ pub enum Verdict {
 }
 
 pub fn nozzle_verdict(material: Material, nozzle_c: i32) -> Verdict {
-    // TODO: write the boundary tests in tests/material.rs first, then replace this line.
-    todo!("nozzle_verdict({material:?}, {nozzle_c})")
+    let (min, max) = material.nozzle_range();
+    if nozzle_c < min {
+        Verdict::TooCold
+    } else if nozzle_c > max {
+        Verdict::TooHot
+    } else {
+        Verdict::Ok
+    }
 }
