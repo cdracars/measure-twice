@@ -114,3 +114,33 @@ fn appending_to_a_new_file_creates_it() {
         ["2026-10-19: levelled the bed"]
     );
 }
+
+#[test]
+fn appending_twice_keeps_the_order() {
+    let dir = TempDir::new();
+    let path = dir.0.join("build.log");
+    append_entry(&path, &entry("2026-10-19", "levelled the bed")).unwrap();
+    append_entry(&path, &entry("2026-10-20", "printed a calibration cube")).unwrap();
+    assert_eq!(
+        lines(&load_log(&path).unwrap().entries),
+        [
+            "2026-10-19: levelled the bed",
+            "2026-10-20: printed a calibration cube"
+        ]
+    );
+}
+
+#[test]
+fn appending_to_an_existing_log_keeps_what_was_there() {
+    let dir = TempDir::new();
+    let path = dir.0.join("build.log");
+    std::fs::copy(fixture("workshop.log"), &path).unwrap();
+    append_entry(&path, &entry("2026-10-19", "levelled the bed")).unwrap();
+    let log = load_log(&path).unwrap();
+    assert_eq!(log.entries.len(), 4);
+    assert_eq!(
+        format_entry(&log.entries[3]),
+        "2026-10-19: levelled the bed"
+    );
+    assert_eq!(log.problems.len(), 3);
+}

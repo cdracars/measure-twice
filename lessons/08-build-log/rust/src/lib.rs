@@ -4,7 +4,8 @@
 //! `Path`/`PathBuf`, `lines()` and `enumerate()`, and `OpenOptions` for
 //! appending.
 
-use std::io;
+use std::fs::{self, OpenOptions};
+use std::io::{self, Write};
 use std::path::Path;
 
 // From lesson 07, finished.
@@ -77,11 +78,27 @@ pub struct LoadedLog {
 }
 
 pub fn load_log(path: &Path) -> io::Result<LoadedLog> {
-    // TODO: replace this line with your implementation.
-    todo!("load_log({path:?})")
+    let text = fs::read_to_string(path)?;
+    let mut entries = Vec::new();
+    let mut problems = Vec::new();
+    // `lines()` handles both "\n" and "\r\n".
+    for (index, line) in text.lines().enumerate() {
+        let trimmed = line.trim();
+        if trimmed.is_empty() || trimmed.starts_with('#') {
+            continue;
+        }
+        match parse_entry(line) {
+            Ok(entry) => entries.push(entry),
+            Err(error) => problems.push(Problem {
+                line_number: index + 1,
+                error,
+            }),
+        }
+    }
+    Ok(LoadedLog { entries, problems })
 }
 
 pub fn append_entry(path: &Path, entry: &LogEntry) -> io::Result<()> {
-    // TODO: write the tests in tests/build_log.rs first, then replace this line.
-    todo!("append_entry({path:?}, {entry:?})")
+    let mut file = OpenOptions::new().create(true).append(true).open(path)?;
+    writeln!(file, "{}", format_entry(entry))
 }

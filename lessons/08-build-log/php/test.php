@@ -115,6 +115,26 @@ test('appending to a new file creates it', function () {
     assert_same(['2026-10-19: levelled the bed'], lines(load_log($path)->entries));
 });
 
+test('appending twice keeps the order', function () {
+    $path = fresh_temp_dir() . '/build.log';
+    append_entry($path, new LogEntry('2026-10-19', 'levelled the bed'));
+    append_entry($path, new LogEntry('2026-10-20', 'printed a calibration cube'));
+    assert_same(
+        ['2026-10-19: levelled the bed', '2026-10-20: printed a calibration cube'],
+        lines(load_log($path)->entries),
+    );
+});
+
+test('appending to an existing log keeps what was there', function () {
+    $path = fresh_temp_dir() . '/build.log';
+    copy(fixture('workshop.log'), $path);
+    append_entry($path, new LogEntry('2026-10-19', 'levelled the bed'));
+    $log = load_log($path);
+    assert_same(4, count($log->entries));
+    assert_same('2026-10-19: levelled the bed', format_entry($log->entries[3]));
+    assert_same(3, count($log->problems));
+});
+
 if ($failures > 0) {
     echo "\n{$failures} failed\n";
     exit(1);

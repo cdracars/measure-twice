@@ -1,3 +1,4 @@
+import shutil
 import tempfile
 import unittest
 from pathlib import Path
@@ -65,6 +66,24 @@ class AppendEntryTest(unittest.TestCase):
         path = self.dir / "build.log"
         append_entry(path, LogEntry("2026-10-19", "levelled the bed"))
         self.assertEqual(["2026-10-19: levelled the bed"], lines(load_log(path).entries))
+
+    def test_appending_twice_keeps_the_order(self):
+        path = self.dir / "build.log"
+        append_entry(path, LogEntry("2026-10-19", "levelled the bed"))
+        append_entry(path, LogEntry("2026-10-20", "printed a calibration cube"))
+        self.assertEqual(
+            ["2026-10-19: levelled the bed", "2026-10-20: printed a calibration cube"],
+            lines(load_log(path).entries),
+        )
+
+    def test_appending_to_an_existing_log_keeps_what_was_there(self):
+        path = self.dir / "build.log"
+        shutil.copy(FIXTURES / "workshop.log", path)
+        append_entry(path, LogEntry("2026-10-19", "levelled the bed"))
+        log = load_log(path)
+        self.assertEqual(4, len(log.entries))
+        self.assertEqual("2026-10-19: levelled the bed", format_entry(log.entries[-1]))
+        self.assertEqual(3, len(log.problems))
 
 
 if __name__ == "__main__":

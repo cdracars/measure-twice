@@ -1,3 +1,5 @@
+import { appendFileSync, readFileSync } from "node:fs";
+
 // From lesson 07, finished.
 
 export type LogEntry = { readonly date: string; readonly text: string };
@@ -34,11 +36,28 @@ export type Problem = { readonly lineNumber: number; readonly error: LogLineErro
 export type LoadedLog = { readonly entries: LogEntry[]; readonly problems: Problem[] };
 
 export function loadLog(path: string): Result<LoadedLog, "not found"> {
-  // TODO: replace this line with your implementation.
-  throw new Error("TODO: implement loadLog");
+  let text: string;
+  try {
+    text = readFileSync(path, "utf8");
+  } catch (error) {
+    if (error instanceof Error && "code" in error && error.code === "ENOENT") {
+      return { ok: false, error: "not found" };
+    }
+    throw error;
+  }
+
+  const entries: LogEntry[] = [];
+  const problems: Problem[] = [];
+  text.split("\n").forEach((line, index) => {
+    const trimmed = line.trim();
+    if (trimmed === "" || trimmed.startsWith("#")) return;
+    const result = parseEntry(line);
+    if (result.ok) entries.push(result.value);
+    else problems.push({ lineNumber: index + 1, error: result.error });
+  });
+  return { ok: true, value: { entries, problems } };
 }
 
 export function appendEntry(path: string, entry: LogEntry): void {
-  // TODO: write the tests in build_log.test.ts first, then replace this line.
-  throw new Error("TODO: implement appendEntry");
+  appendFileSync(path, `${formatEntry(entry)}\n`, "utf8");
 }

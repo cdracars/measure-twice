@@ -88,12 +88,37 @@ final readonly class LoadedLog
  */
 function load_log(string $path): LoadedLog
 {
-    // TODO: replace this line with your implementation.
-    throw new RuntimeException('TODO: implement load_log');
+    // Check first: file_get_contents on a missing file returns false and
+    // prints a warning instead of throwing.
+    if (!is_file($path)) {
+        throw new LogFileNotFound("no log file at {$path}");
+    }
+    $contents = file_get_contents($path);
+    if ($contents === false) {
+        throw new RuntimeException("could not read {$path}");
+    }
+
+    $entries = [];
+    $problems = [];
+    foreach (explode("\n", $contents) as $index => $line) {
+        $trimmed = trim($line);
+        if ($trimmed === '' || str_starts_with($trimmed, '#')) {
+            continue;
+        }
+        try {
+            $entries[] = parse_entry($line);
+        } catch (InvalidLogLine $error) {
+            $problems[] = new Problem($index + 1, $error);
+        }
+    }
+
+    return new LoadedLog($entries, $problems);
 }
 
 function append_entry(string $path, LogEntry $entry): void
 {
-    // TODO: write the tests in test.php first, then replace this line.
-    throw new RuntimeException('TODO: implement append_entry');
+    $written = file_put_contents($path, format_entry($entry) . "\n", FILE_APPEND | LOCK_EX);
+    if ($written === false) {
+        throw new RuntimeException("could not write to {$path}");
+    }
 }

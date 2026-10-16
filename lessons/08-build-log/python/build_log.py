@@ -65,10 +65,20 @@ class LoadedLog:
 
 def load_log(path: Path) -> LoadedLog:
     """Raises FileNotFoundError if the file doesn't exist."""
-    # TODO: replace this line with your implementation.
-    raise NotImplementedError("TODO: implement load_log")
+    entries: list[LogEntry] = []
+    problems: list[Problem] = []
+    # splitlines() handles "\n", "\r\n", and other line endings.
+    for number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#"):
+            continue
+        try:
+            entries.append(parse_entry(line))
+        except InvalidLogLine as error:
+            problems.append(Problem(number, error))
+    return LoadedLog(entries, problems)
 
 
 def append_entry(path: Path, entry: LogEntry) -> None:
-    # TODO: write the tests in test_build_log.py first, then replace this line.
-    raise NotImplementedError("TODO: implement append_entry")
+    with path.open("a", encoding="utf-8") as file:
+        file.write(format_entry(entry) + "\n")

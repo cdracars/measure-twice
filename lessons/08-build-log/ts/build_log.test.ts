@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtempSync, rmSync } from "node:fs";
+import { copyFileSync, mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, test } from "node:test";
@@ -68,5 +68,25 @@ describe("appendEntry", () => {
     const path = join(dir, "build.log");
     appendEntry(path, { date: "2026-10-19", text: "levelled the bed" });
     assert.deepEqual(lines(load(path).entries), ["2026-10-19: levelled the bed"]);
+  });
+
+  test("appending twice keeps the order", () => {
+    const path = join(dir, "build.log");
+    appendEntry(path, { date: "2026-10-19", text: "levelled the bed" });
+    appendEntry(path, { date: "2026-10-20", text: "printed a calibration cube" });
+    assert.deepEqual(lines(load(path).entries), [
+      "2026-10-19: levelled the bed",
+      "2026-10-20: printed a calibration cube",
+    ]);
+  });
+
+  test("appending to an existing log keeps what was there", () => {
+    const path = join(dir, "build.log");
+    copyFileSync(join(fixtures, "workshop.log"), path);
+    appendEntry(path, { date: "2026-10-19", text: "levelled the bed" });
+    const log = load(path);
+    assert.equal(log.entries.length, 4);
+    assert.equal(formatEntry(log.entries[3]!), "2026-10-19: levelled the bed");
+    assert.equal(log.problems.length, 3);
   });
 });
