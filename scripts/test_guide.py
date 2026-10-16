@@ -1,0 +1,377 @@
+"""Tests for the guide. Run: python3 -m unittest discover -s scripts"""
+
+import tempfile
+import unittest
+from pathlib import Path
+
+import guide
+from guide import Exercise, Progress, TestResult
+
+# Output captured from each test runner, trimmed. Paths are shortened to /r.
+
+PHP_OUTPUT = """\
+  ok    one metre of 1.75 mm PLA weighs about 3 g
+  FAIL  zero length weighs nothing
+        expected 0 (± 0.01), got 2.5
+
+1 failed
+"""
+
+PYTHON_OUTPUT = """\
+test_one_metre_of_pla_weighs_about_3_g (test_filament.FilamentMathTest.test_one_metre_of_pla_weighs_about_3_g) ... FAIL
+test_a_1_kg_spool_holds_about_335_m (test_filament.FilamentMathTest.test_a_1_kg_spool_holds_about_335_m) ... ERROR
+test_zero_length_weighs_nothing (test_filament.FilamentMathTest.test_zero_length_weighs_nothing) ... ok
+
+======================================================================
+ERROR: test_a_1_kg_spool_holds_about_335_m (test_filament.FilamentMathTest.test_a_1_kg_spool_holds_about_335_m)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/r/lessons/01-filament-math/python/test_filament.py", line 20, in test_a_1_kg_spool_holds_about_335_m
+    self.assertAlmostEqual(335_280.0, filament_length_mm(1000.0, 1.75, 1.24), delta=50.0)
+  File "/r/lessons/01-filament-math/python/filament.py", line 9, in filament_length_mm
+    raise NotImplementedError("TODO: implement filament_length_mm")
+NotImplementedError: TODO: implement filament_length_mm
+
+======================================================================
+FAIL: test_one_metre_of_pla_weighs_about_3_g (test_filament.FilamentMathTest.test_one_metre_of_pla_weighs_about_3_g)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/r/lessons/01-filament-math/python/test_filament.py", line 8, in test_one_metre_of_pla_weighs_about_3_g
+    self.assertAlmostEqual(2.98, filament_grams(1000.0, 1.75, 1.24), delta=0.01)
+AssertionError: 2.98 != 2500.0 within 0.01 delta (2497.02 difference)
+
+----------------------------------------------------------------------
+Ran 3 tests in 0.001s
+"""
+
+TS_JUNIT = """\
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+\t<testsuite name="nozzleVerdict" tests="2" failures="1">
+\t\t<testcase name="PLA in the middle of its range is ok" classname="test"/>
+\t\t<testcase name="one metre of PLA weighs about 3 g" classname="test" failure="x">
+\t\t\t<failure type="testCodeFailure" message="expected 2.98 (± 0.01), got 2.5">
+AssertionError: expected 2.98 (± 0.01), got 2.5
+    at assertClose (file:///r/lessons/01-filament-math/ts/filament.test.ts:7:10)
+    at TestContext.&lt;anonymous&gt; (file:///r/lessons/01-filament-math/ts/filament.test.ts:14:3)
+    at Test.runInAsyncScope (node:async_hooks:214:14)
+</failure>
+\t\t</testcase>
+\t</testsuite>
+\t<testcase name="top-level test" classname="test"/>
+</testsuites>
+"""
+
+RUST_OUTPUT = """\
+running 3 tests
+test zero_length_weighs_nothing ... ok
+test a_1_kg_spool_holds_about_335_m ... FAILED
+test one_metre_of_pla_weighs_about_3_g ... FAILED
+
+failures:
+
+---- a_1_kg_spool_holds_about_335_m stdout ----
+
+thread 'a_1_kg_spool_holds_about_335_m' (1197) panicked at lessons/01-filament-math/rust/src/lib.rs:14:5:
+not yet implemented: implement filament_length_mm(1000, 1.75, 1.24)
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- one_metre_of_pla_weighs_about_3_g stdout ----
+
+thread 'one_metre_of_pla_weighs_about_3_g' (1198) panicked at lessons/01-filament-math/rust/tests/filament.rs:4:5:
+expected 2.98 (± 0.01), got 2.5
+
+failures:
+    a_1_kg_spool_holds_about_335_m
+    one_metre_of_pla_weighs_about_3_g
+
+test result: FAILED. 1 passed; 2 failed; 0 ignored; 0 measured; 0 filtered out
+"""
+
+
+def by_name(results: list[TestResult]) -> dict[str, TestResult]:
+    return {r.name: r for r in results}
+
+
+class ParseTest(unittest.TestCase):
+    def test_php(self):
+        results = guide.parse_php(PHP_OUTPUT)
+        self.assertEqual(
+            [
+                TestResult("one metre of 1.75 mm PLA weighs about 3 g", True),
+                TestResult("zero length weighs nothing", False),
+            ],
+            results,
+        )
+        self.assertEqual("expected 0 (± 0.01), got 2.5", results[1].message)
+
+    def test_python(self):
+        results = guide.parse_python(PYTHON_OUTPUT)
+        self.assertEqual(
+            [
+                TestResult("test_one_metre_of_pla_weighs_about_3_g", False),
+                TestResult("test_a_1_kg_spool_holds_about_335_m", False),
+                TestResult("test_zero_length_weighs_nothing", True),
+            ],
+            results,
+        )
+        failures = by_name(results)
+        self.assertEqual(
+            "AssertionError: 2.98 != 2500.0 within 0.01 delta (2497.02 difference)",
+            failures["test_one_metre_of_pla_weighs_about_3_g"].message,
+        )
+        stub = failures["test_a_1_kg_spool_holds_about_335_m"]
+        self.assertEqual("NotImplementedError: TODO: implement filament_length_mm", stub.message)
+        self.assertEqual("/r/lessons/01-filament-math/python/test_filament.py:20", stub.location)
+
+    def test_ts_junit_skips_suites_and_reads_failures(self):
+        results = guide.parse_ts(TS_JUNIT)
+        self.assertEqual(
+            [
+                TestResult("PLA in the middle of its range is ok", True),
+                TestResult("one metre of PLA weighs about 3 g", False),
+                TestResult("top-level test", True),
+            ],
+            results,
+        )
+        self.assertEqual("expected 2.98 (± 0.01), got 2.5", results[1].message)
+        self.assertEqual("/r/lessons/01-filament-math/ts/filament.test.ts:14", results[1].location)
+
+    def test_ts_junit_that_is_not_xml_gives_no_results(self):
+        self.assertEqual([], guide.parse_ts("SyntaxError: something broke"))
+
+    def test_rust(self):
+        results = guide.parse_rust(RUST_OUTPUT)
+        self.assertEqual(
+            [
+                TestResult("zero_length_weighs_nothing", True),
+                TestResult("a_1_kg_spool_holds_about_335_m", False),
+                TestResult("one_metre_of_pla_weighs_about_3_g", False),
+            ],
+            results,
+        )
+        failures = by_name(results)
+        stub = failures["a_1_kg_spool_holds_about_335_m"]
+        self.assertEqual(
+            "not yet implemented: implement filament_length_mm(1000, 1.75, 1.24)", stub.message
+        )
+        self.assertEqual("lessons/01-filament-math/rust/src/lib.rs:14", stub.location)
+        self.assertEqual(
+            "expected 2.98 (± 0.01), got 2.5",
+            failures["one_metre_of_pla_weighs_about_3_g"].message,
+        )
+
+    def test_rust_compile_error_gives_no_results(self):
+        self.assertEqual([], guide.parse_rust("error[E0308]: mismatched types\n"))
+
+
+class MatchTest(unittest.TestCase):
+    def test_a_phrase_matches_names_in_every_language_style(self):
+        for name in [
+            "a 1 kg spool of 1.75 mm PLA holds about 335 m",
+            "test_a_1_kg_spool_holds_about_335_m",
+            "a_1_kg_spool_holds_about_335_m",
+        ]:
+            with self.subTest(name=name):
+                self.assertTrue(guide.matches(name, "1 kg spool"))
+
+    def test_matching_ignores_case(self):
+        self.assertTrue(guide.matches("PLA does not need an Enclosure", "enclosure"))
+
+    def test_a_phrase_that_is_not_there_does_not_match(self):
+        self.assertFalse(guide.matches("zero length weighs nothing", "1 kg spool"))
+
+    def test_readable_names_drop_underscores_and_the_test_prefix(self):
+        self.assertEqual(
+            "zero length weighs nothing", guide.readable("test_zero_length_weighs_nothing")
+        )
+        self.assertEqual("PLA at its minimum is ok", guide.readable("PLA at its minimum is ok"))
+
+
+def exercise(**overrides) -> Exercise:
+    fields = {
+        "lesson": "01-filament-math",
+        "number": 1,
+        "title": "Weight from a length",
+        "task": "Implement it.",
+        "kind": "check",
+        "tests": ("weighs about 3 g", "zero length"),
+        "exclude": (),
+        "min_tests": 1,
+        "hints": ("one", "two", "three"),
+        "checklist": (),
+    }
+    fields.update(overrides)
+    return Exercise(**fields)
+
+
+RESULTS = [
+    TestResult("one metre of PLA weighs about 3 g", True),
+    TestResult("zero length weighs nothing", True),
+    TestResult("a 1 kg spool holds about 335 m", False),
+    TestResult("ABS needs an enclosure", False),
+]
+
+
+class EvaluateTest(unittest.TestCase):
+    def test_only_the_exercise_tests_count(self):
+        evaluation = guide.evaluate(exercise(), RESULTS)
+        self.assertEqual(2, len(evaluation.selected))
+        self.assertTrue(evaluation.passed)
+
+    def test_a_failing_selected_test_means_not_passed(self):
+        evaluation = guide.evaluate(exercise(tests=("1 kg spool",)), RESULTS)
+        self.assertFalse(evaluation.passed)
+
+    def test_all_selects_every_test_except_excluded_ones(self):
+        evaluation = guide.evaluate(exercise(tests="all", exclude=("enclosure",)), RESULTS)
+        self.assertEqual(3, len(evaluation.selected))
+
+    def test_no_matching_tests_is_not_a_pass(self):
+        evaluation = guide.evaluate(exercise(tests=("nothing like this",)), RESULTS)
+        self.assertFalse(evaluation.passed)
+
+    def test_too_few_tests_is_not_enough(self):
+        evaluation = guide.evaluate(exercise(tests=("enclosure",), min_tests=3), RESULTS)
+        self.assertFalse(evaluation.enough)
+
+
+class CompleteTest(unittest.TestCase):
+    passing = tuple(TestResult(f"needs enclosure {n}", True) for n in range(3))
+    failing = tuple(TestResult(f"needs enclosure {n}", False) for n in range(3))
+
+    def tests_first(self) -> Exercise:
+        return exercise(kind="tests-first", tests=("enclosure",), min_tests=3)
+
+    def test_a_check_exercise_is_complete_when_its_tests_pass(self):
+        self.assertTrue(guide.is_complete(exercise(), guide.evaluate(exercise(), RESULTS), False))
+
+    def test_tests_first_needs_to_have_seen_the_tests_fail(self):
+        evaluation = guide.evaluate(self.tests_first(), list(self.passing))
+        self.assertFalse(guide.is_complete(self.tests_first(), evaluation, seen_red=False))
+        self.assertTrue(guide.is_complete(self.tests_first(), evaluation, seen_red=True))
+
+    def test_red_counts_only_with_enough_tests(self):
+        self.assertTrue(guide.counts_as_red(guide.evaluate(self.tests_first(), list(self.failing))))
+        too_few = [TestResult("needs enclosure", False)]
+        self.assertFalse(guide.counts_as_red(guide.evaluate(self.tests_first(), too_few)))
+
+    def test_a_confirm_exercise_is_never_complete_on_its_own(self):
+        confirm = exercise(kind="confirm", tests="all")
+        evaluation = guide.evaluate(confirm, list(self.passing))
+        self.assertFalse(guide.is_complete(confirm, evaluation, False))
+
+
+class HintTest(unittest.TestCase):
+    def test_a_plain_hint_is_the_same_in_every_language(self):
+        self.assertEqual("Think.", guide.hint_text("Think.", "rust"))
+
+    def test_a_hint_table_picks_the_learners_language(self):
+        hint = {"php": "Use M_PI.", "rust": "Use PI.", "default": "Use pi."}
+        self.assertEqual("Use M_PI.", guide.hint_text(hint, "php"))
+        self.assertEqual("Use pi.", guide.hint_text(hint, "python"))
+
+
+class ScreenTest(unittest.TestCase):
+    def test_progress_bar(self):
+        self.assertEqual("████░░░░░░  40%", guide.progress_bar(2, 5, width=10))
+
+    def test_progress_bar_with_nothing_to_do(self):
+        self.assertEqual("░░░░░░░░░░   0%", guide.progress_bar(0, 0, width=10))
+
+    def test_failures_show_name_message_and_location(self):
+        failure = TestResult(
+            "test_zero_length_weighs_nothing", False, "expected 0, got 2.5", "t.py:12"
+        )
+        text = guide.describe_failure(failure)
+        self.assertIn("zero length weighs nothing", text)
+        self.assertIn("expected 0, got 2.5", text)
+        self.assertIn("t.py:12", text)
+
+    def test_paths_are_shown_relative_to_the_repository(self):
+        self.assertEqual(
+            "lessons/x/t.py:3", guide.relative(str(guide.ROOT / "lessons/x/t.py") + ":3")
+        )
+        self.assertEqual("elsewhere.py:3", guide.relative("elsewhere.py:3"))
+
+
+class DoctorTest(unittest.TestCase):
+    def test_version_numbers_are_found_in_tool_output(self):
+        self.assertEqual((8, 3, 6), guide.version_in("PHP 8.3.6 (cli) (built: Sep  2 2026)"))
+        self.assertEqual((22, 22, 0), guide.version_in("v22.22.0"))
+        self.assertEqual((1, 97, 0), guide.version_in("cargo 1.97.0 (c980f4866 2026-06-30)"))
+        self.assertIsNone(guide.version_in("command not found"))
+
+    def test_a_new_enough_tool_has_no_problem(self):
+        self.assertIsNone(guide.tool_problem("ts", "v22.22.0"))
+
+    def test_an_old_tool_is_a_problem(self):
+        problem = guide.tool_problem("ts", "v20.1.0")
+        assert problem is not None
+        self.assertIn("22.18", problem)
+        self.assertIn("nodejs.org", problem)
+
+    def test_a_missing_tool_is_a_problem(self):
+        problem = guide.tool_problem("php", None)
+        assert problem is not None
+        self.assertIn("isn't installed", problem)
+
+
+class ProgressTest(unittest.TestCase):
+    exercises = (exercise(number=1), exercise(number=2))
+
+    def test_steps_go_lesson_by_lesson_then_language_by_language(self):
+        steps = guide.steps(list(self.exercises), ["php", "rust"])
+        self.assertEqual(
+            ["01.1:php", "01.2:php", "01.1:rust", "01.2:rust"],
+            [guide.step_key(e, lang) for e, lang in steps],
+        )
+
+    def test_the_current_step_is_the_first_one_not_done(self):
+        progress = Progress(languages=["php", "rust"], done={"01.1:php"})
+        current = guide.current_step(list(self.exercises), progress)
+        assert current is not None
+        self.assertEqual("01.2:php", guide.step_key(*current))
+
+    def test_no_current_step_when_everything_is_done(self):
+        progress = Progress(languages=["php"], done={"01.1:php", "01.2:php"})
+        self.assertIsNone(guide.current_step(list(self.exercises), progress))
+
+    def test_progress_round_trips_through_a_file(self):
+        with tempfile.TemporaryDirectory() as temp:
+            path = Path(temp) / "progress.json"
+            progress = Progress(languages=["ts"], done={"01.1:ts"}, hints={"01.2:ts": 2})
+            progress.save(path)
+            self.assertEqual(progress, Progress.load(path))
+
+    def test_missing_progress_file_means_a_fresh_start(self):
+        self.assertEqual(Progress(), Progress.load(Path("/no/such/progress.json")))
+
+    def test_parse_languages_accepts_short_and_long_names(self):
+        self.assertEqual(["php", "ts"], guide.parse_languages("PHP typescript"))
+        self.assertEqual(["python", "rust"], guide.parse_languages("py, rust"))
+
+    def test_parse_languages_rejects_unknown_names(self):
+        with self.assertRaises(ValueError):
+            guide.parse_languages("php cobol")
+
+
+class LessonFilesTest(unittest.TestCase):
+    """The real guide.toml files load and are well formed."""
+
+    def test_every_guided_lesson_loads(self):
+        exercises = guide.load_exercises(guide.ROOT)
+        self.assertGreater(len(exercises), 0)
+        for e in exercises:
+            with self.subTest(exercise=e.key):
+                self.assertIn(e.kind, ("check", "tests-first", "confirm"))
+                self.assertTrue(e.title and e.task and e.lesson_title and e.learned)
+                if e.kind != "confirm":
+                    self.assertEqual(3, len(e.hints), "check exercises get three hints")
+                for hint in e.hints:
+                    for language in guide.LANGUAGES:
+                        self.assertTrue(guide.hint_text(hint, language))
+
+
+if __name__ == "__main__":
+    unittest.main()

@@ -1,5 +1,8 @@
 use lesson_03_spool::Spool;
 
+// #[track_caller]: when this fails, report the line of the test that called
+// it, not a line inside this helper.
+#[track_caller]
 fn assert_close(expected: f64, actual: f64, tolerance: f64) {
     assert!(
         (expected - actual).abs() <= tolerance,

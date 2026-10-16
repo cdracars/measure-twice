@@ -17,6 +17,9 @@ through it, and the point is that **they** write the exercise code.
 - Never edit tests to make them pass. Learners may add tests.
 - Reference solutions are on the `solutions` branch. Don't read from it
   unless the learner asks you to.
+- If the learner uses `./scripts/guide`, its hints for the current step are in
+  that lesson's `guide.toml`. Prefer pointing them to the next hint
+  (`h` in the guide) over writing your own.
 
 ## When working on the course itself
 
@@ -28,5 +31,9 @@ through it, and the point is that **they** write the exercise code.
   and keep that branch green (ADR 0002).
 - Verify with `./scripts/check` on `solutions`, plus the lint steps in
   `.github/workflows/ci.yml`.
+- Guided lessons have a `guide.toml` (ADR 0004). When you change a lesson's
+  tests, run `./scripts/guide verify --structure` on `main` and
+  `./scripts/guide verify` on `solutions`. The guide's own tests:
+  `python3 -m unittest discover -s scripts`.
 - Use glossary terms in code and lesson text; add new terms when a lesson
   introduces them.

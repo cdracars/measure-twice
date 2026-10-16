@@ -1,0 +1,3 @@
+#!/usr/bin/env sh
+# The guided way through the course. See scripts/guide.py, or run: ./scripts/guide help
+exec python3 "$(dirname "$0")/guide.py" "$@"

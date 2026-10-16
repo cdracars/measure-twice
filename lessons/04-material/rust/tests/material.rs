@@ -1,5 +1,8 @@
 use lesson_04_material::{Material, Verdict, nozzle_verdict};
 
+// #[track_caller]: when this fails, report the line of the test that called
+// it, not a line inside this helper.
+#[track_caller]
 fn assert_close(expected: f64, actual: f64) {
     assert!(
         (expected - actual).abs() <= 0.001,

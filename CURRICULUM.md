@@ -99,6 +99,8 @@ You learn these by working inside them, not by reading about them:
   realistic, small frameworks from stage 2 on
   ([ADR 0003](docs/adr/0003-realistic-tools-from-stage-2.md))
 - Decisions recorded as ADRs in `docs/adr/`
+- A guide runner that walks learners through each lesson step by step
+  ([ADR 0004](docs/adr/0004-a-guide-runner.md)); lessons 01–02 so far
 - Shared vocabulary in [GLOSSARY.md](GLOSSARY.md)
 - Later: conventional commits, a dev container, pre-commit hooks
 
