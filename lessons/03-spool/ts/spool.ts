@@ -1,32 +1,37 @@
 /** A reel of filament, and how much of it is left. */
 export class Spool {
-  // TODO: declare the fields a spool needs. Make the remaining grams a
-  // JavaScript private field (#gramsRemaining), so only consume() can change it.
+  readonly #material: string;
+  readonly #diameterMm: number;
+  readonly #densityGPerCm3: number;
+  #gramsRemaining: number;
 
   constructor(material: string, diameterMm: number, densityGPerCm3: number, gramsRemaining: number) {
-    // TODO: replace this line with your implementation.
-    throw new Error("TODO: implement the Spool constructor");
+    this.#material = material;
+    this.#diameterMm = diameterMm;
+    this.#densityGPerCm3 = densityGPerCm3;
+    this.#gramsRemaining = gramsRemaining;
   }
 
   get material(): string {
-    throw new Error("TODO: implement Spool.material");
+    return this.#material;
   }
 
   get gramsRemaining(): number {
-    throw new Error("TODO: implement Spool.gramsRemaining");
+    return this.#gramsRemaining;
   }
 
   remainingLengthMm(): number {
-    throw new Error("TODO: implement Spool.remainingLengthMm");
+    const areaMm2 = Math.PI * (this.#diameterMm / 2) ** 2;
+    const gramsPerMm = (areaMm2 / 1000) * this.#densityGPerCm3;
+    return this.#gramsRemaining / gramsPerMm;
   }
 
   canPrint(grams: number): boolean {
-    throw new Error("TODO: implement Spool.canPrint");
+    return grams <= this.#gramsRemaining;
   }
 
   /** Use up filament. Callers must check canPrint() first. */
   consume(grams: number): void {
-    // TODO: write the tests in spool.test.ts first, then replace this line.
-    throw new Error("TODO: implement Spool.consume");
+    this.#gramsRemaining -= grams;
   }
 }

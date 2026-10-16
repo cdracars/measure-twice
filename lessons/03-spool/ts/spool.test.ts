@@ -54,4 +54,30 @@ describe("Spool", () => {
 });
 
 // consume: no tests yet. Write them before the code.
-describe("consume", () => {});
+describe("consume", () => {
+  test("consuming reduces what is left", () => {
+    const spool = fullPlaSpool();
+    spool.consume(250);
+    assertClose(750, spool.gramsRemaining);
+  });
+
+  test("two jobs in a row add up", () => {
+    const spool = fullPlaSpool();
+    spool.consume(100);
+    spool.consume(50);
+    assertClose(850, spool.gramsRemaining);
+  });
+
+  test("consuming everything leaves nothing to print with", () => {
+    const spool = fullPlaSpool();
+    spool.consume(1000);
+    assertClose(0, spool.gramsRemaining);
+    assert.equal(spool.canPrint(0.1), false);
+  });
+
+  test("consuming shortens the remaining length", () => {
+    const spool = fullPlaSpool();
+    spool.consume(500);
+    assertClose(167_640, spool.remainingLengthMm(), 50);
+  });
+});

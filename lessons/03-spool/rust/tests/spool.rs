@@ -52,3 +52,33 @@ fn a_job_needing_more_than_is_left_cannot_print() {
 // Try it.
 
 // consume: no tests yet. Write them before the code. Remember `let mut`.
+
+#[test]
+fn consuming_reduces_what_is_left() {
+    let mut spool = full_pla_spool();
+    spool.consume(250.0);
+    assert_close(750.0, spool.grams_remaining(), 0.01);
+}
+
+#[test]
+fn two_jobs_in_a_row_add_up() {
+    let mut spool = full_pla_spool();
+    spool.consume(100.0);
+    spool.consume(50.0);
+    assert_close(850.0, spool.grams_remaining(), 0.01);
+}
+
+#[test]
+fn consuming_everything_leaves_nothing_to_print_with() {
+    let mut spool = full_pla_spool();
+    spool.consume(1000.0);
+    assert_close(0.0, spool.grams_remaining(), 0.01);
+    assert!(!spool.can_print(0.1));
+}
+
+#[test]
+fn consuming_shortens_the_remaining_length() {
+    let mut spool = full_pla_spool();
+    spool.consume(500.0);
+    assert_close(167_640.0, spool.remaining_length_mm(), 50.0);
+}

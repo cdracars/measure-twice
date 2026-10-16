@@ -39,6 +39,28 @@ class SpoolTest(unittest.TestCase):
 class ConsumeTest(unittest.TestCase):
     """No tests yet. Write them before the code."""
 
+    def test_consuming_reduces_what_is_left(self):
+        spool = full_pla_spool()
+        spool.consume(250.0)
+        self.assertAlmostEqual(750.0, spool.grams_remaining, delta=0.01)
+
+    def test_two_jobs_in_a_row_add_up(self):
+        spool = full_pla_spool()
+        spool.consume(100.0)
+        spool.consume(50.0)
+        self.assertAlmostEqual(850.0, spool.grams_remaining, delta=0.01)
+
+    def test_consuming_everything_leaves_nothing_to_print_with(self):
+        spool = full_pla_spool()
+        spool.consume(1000.0)
+        self.assertAlmostEqual(0.0, spool.grams_remaining, delta=0.01)
+        self.assertFalse(spool.can_print(0.1))
+
+    def test_consuming_shortens_the_remaining_length(self):
+        spool = full_pla_spool()
+        spool.consume(500.0)
+        self.assertAlmostEqual(167_640.0, spool.remaining_length_mm(), delta=50.0)
+
 
 if __name__ == "__main__":
     unittest.main()

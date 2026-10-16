@@ -76,6 +76,32 @@ test('remaining grams cannot be set from outside', function () {
 
 // consume: no tests yet. Write them before the code.
 
+test('consuming reduces what is left', function () {
+    $spool = full_pla_spool();
+    $spool->consume(250.0);
+    assert_close(750.0, $spool->gramsRemaining());
+});
+
+test('two jobs in a row add up', function () {
+    $spool = full_pla_spool();
+    $spool->consume(100.0);
+    $spool->consume(50.0);
+    assert_close(850.0, $spool->gramsRemaining());
+});
+
+test('consuming everything leaves nothing to print with', function () {
+    $spool = full_pla_spool();
+    $spool->consume(1000.0);
+    assert_close(0.0, $spool->gramsRemaining());
+    assert_same(false, $spool->canPrint(0.1));
+});
+
+test('consuming shortens the remaining length', function () {
+    $spool = full_pla_spool();
+    $spool->consume(500.0);
+    assert_close(167_640.0, $spool->remainingLengthMm(), 50.0);
+});
+
 if ($failures > 0) {
     echo "\n{$failures} failed\n";
     exit(1);

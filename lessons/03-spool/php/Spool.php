@@ -7,37 +7,38 @@ declare(strict_types=1);
  */
 final class Spool
 {
-    // TODO: declare the properties a spool needs. Keep the remaining grams
-    // private, so only consume() can change them.
+    private float $gramsRemaining;
 
     public function __construct(
-        string $material,
-        float $diameterMm,
-        float $densityGPerCm3,
+        private readonly string $material,
+        private readonly float $diameterMm,
+        private readonly float $densityGPerCm3,
         float $gramsRemaining,
     ) {
-        // TODO: replace this line with your implementation.
-        throw new RuntimeException('TODO: implement Spool::__construct');
+        $this->gramsRemaining = $gramsRemaining;
     }
 
     public function material(): string
     {
-        throw new RuntimeException('TODO: implement Spool::material');
+        return $this->material;
     }
 
     public function gramsRemaining(): float
     {
-        throw new RuntimeException('TODO: implement Spool::gramsRemaining');
+        return $this->gramsRemaining;
     }
 
     public function remainingLengthMm(): float
     {
-        throw new RuntimeException('TODO: implement Spool::remainingLengthMm');
+        $areaMm2 = M_PI * ($this->diameterMm / 2) ** 2;
+        $gramsPerMm = $areaMm2 / 1000 * $this->densityGPerCm3;
+
+        return $this->gramsRemaining / $gramsPerMm;
     }
 
     public function canPrint(float $grams): bool
     {
-        throw new RuntimeException('TODO: implement Spool::canPrint');
+        return $grams <= $this->gramsRemaining;
     }
 
     /**
@@ -45,7 +46,6 @@ final class Spool
      */
     public function consume(float $grams): void
     {
-        // TODO: write the tests in test.php first, then replace this line.
-        throw new RuntimeException('TODO: implement Spool::consume');
+        $this->gramsRemaining -= $grams;
     }
 }

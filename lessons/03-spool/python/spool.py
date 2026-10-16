@@ -1,3 +1,6 @@
+import math
+
+
 class Spool:
     """A reel of filament, and how much of it is left."""
 
@@ -8,25 +11,27 @@ class Spool:
         density_g_per_cm3: float,
         grams_remaining: float,
     ) -> None:
-        # TODO: store the values. Name the remaining grams _grams_remaining,
-        # so the convention says "don't touch this from outside".
-        raise NotImplementedError("TODO: implement Spool.__init__")
+        self._material = material
+        self._diameter_mm = diameter_mm
+        self._density_g_per_cm3 = density_g_per_cm3
+        self._grams_remaining = grams_remaining
 
     @property
     def material(self) -> str:
-        raise NotImplementedError("TODO: implement Spool.material")
+        return self._material
 
     @property
     def grams_remaining(self) -> float:
-        raise NotImplementedError("TODO: implement Spool.grams_remaining")
+        return self._grams_remaining
 
     def remaining_length_mm(self) -> float:
-        raise NotImplementedError("TODO: implement Spool.remaining_length_mm")
+        area_mm2 = math.pi * (self._diameter_mm / 2) ** 2
+        grams_per_mm = area_mm2 / 1000 * self._density_g_per_cm3
+        return self._grams_remaining / grams_per_mm
 
     def can_print(self, grams: float) -> bool:
-        raise NotImplementedError("TODO: implement Spool.can_print")
+        return grams <= self._grams_remaining
 
     def consume(self, grams: float) -> None:
         """Use up filament. Callers must check can_print() first."""
-        # TODO: write the tests in test_spool.py first, then replace this line.
-        raise NotImplementedError("TODO: implement Spool.consume")
+        self._grams_remaining -= grams
