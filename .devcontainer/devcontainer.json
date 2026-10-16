@@ -1,0 +1,35 @@
+{
+  "name": "Measure Twice",
+  "image": "mcr.microsoft.com/devcontainers/php:4-8.4-trixie",
+  "features": {
+    "ghcr.io/devcontainers/features/python:1": {
+      "version": "os-provided",
+      "installTools": false
+    },
+    "ghcr.io/devcontainers/features/node:2": {
+      "version": "22"
+    },
+    "ghcr.io/devcontainers/features/rust:1": {
+      "version": "latest",
+      "profile": "minimal",
+      "components": "rustfmt,clippy,rust-analyzer,rust-src"
+    }
+  },
+  "containerEnv": {
+    "XDEBUG_MODE": "off"
+  },
+  "postCreateCommand": "bash .devcontainer/post-create.sh",
+  "customizations": {
+    "codespaces": {
+      "openFiles": ["README.md"]
+    },
+    "vscode": {
+      "extensions": [
+        "rust-lang.rust-analyzer",
+        "ms-python.python",
+        "charliermarsh.ruff",
+        "bmewburn.vscode-intelephense-client"
+      ]
+    }
+  }
+}

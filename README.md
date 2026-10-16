@@ -42,6 +42,22 @@ lesson.
 
 ## Setup
 
+### The quick way: nothing to install
+
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/cdracars/measure-twice)
+
+Click the badge to open the course in a GitHub Codespace: VS Code in your
+browser with PHP 8.4, Python, Node.js, Rust, Composer and uv already set up.
+The first start takes a few minutes while it builds; after that, open a
+terminal and run `./scripts/guide`. GitHub's free plan includes some Codespaces
+hours each month.
+
+The same setup runs on your own machine with VS Code's Dev Containers
+extension and Docker: open the folder, then choose *Reopen in Container*. The
+configuration is in `.devcontainer/`.
+
+### On your own machine
+
 Install the four toolchains:
 
 | Language | Install | Check |
