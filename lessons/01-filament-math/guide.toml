@@ -1,0 +1,69 @@
+# Guided steps for ./scripts/guide. Test phrases are matched against test
+# names in every language, ignoring case, underscores and a test_ prefix.
+# A hint is either one text, or a table with a text per language and a default.
+
+title = "Filament math"
+
+[files]
+php = { edit = "php/filament.php", tests = "php/test.php" }
+python = { edit = "python/filament.py", tests = "python/test_filament.py" }
+ts = { edit = "ts/filament.ts", tests = "ts/filament.test.ts" }
+rust = { edit = "rust/src/lib.rs", tests = "rust/tests/filament.rs" }
+
+[[exercise]]
+title = "Weight from a length"
+task = """
+Implement filament_grams: the weight in grams of a length of filament. The
+lesson README has the formula. Only the tests for this function count here.
+"""
+tests = ["weighs about 3 g", "zero length", "much heavier", "denser material"]
+learned = "turning a formula into code, and red → green"
+hints = [
+    "Turn the README's formula into code one line at a time, with a named variable for each: area, volume in mm³, volume in cm³, weight.",
+    { php = "π is M_PI. To square a number: $radius ** 2.", python = "π is math.pi (add import math at the top). To square a number: radius ** 2.", ts = "π is Math.PI. To square a number: radius ** 2.", rust = "π is std::f64::consts::PI. To square a number: radius.powi(2). Write 2.0 and 1000.0, not 2 and 1000: Rust won't mix integers and floats.", default = "Look up how your language writes π and squares a number." },
+    "radius = diameter ÷ 2; area = π × radius²; mm³ = area × length; cm³ = mm³ ÷ 1000; grams = cm³ × density. Return grams.",
+]
+
+[[exercise]]
+title = "Length from a weight"
+task = """
+Implement filament_length_mm: the length of filament in a given weight. It's
+the first function run backwards.
+"""
+tests = ["1 kg spool", "back and forth"]
+learned = "working a calculation backwards, and reusing what you already wrote"
+hints = [
+    "If weight = length × (grams per millimetre), then length = weight ÷ (grams per millimetre).",
+    "Grams per millimetre is the first function's calculation with a length of 1 mm.",
+    "Write a helper, grams_per_mm(diameter, density). Then filament_length_mm returns grams ÷ grams_per_mm(...). That's half of the next step done early.",
+]
+
+[[exercise]]
+title = "Refactor"
+kind = "confirm"
+task = """
+Every test passes. Now make the code clearer without changing what it does.
+Run the tests after each small change; they're your safety net.
+"""
+tests = "all"
+learned = "refactoring with tests as a safety net"
+checklist = [
+    "Each step of the formula has a named variable",
+    "The two functions share the per-millimetre calculation instead of repeating it",
+    "The tests still pass",
+]
+
+[[exercise]]
+title = "A test of your own"
+task = """
+Add one test of your own to the tests file: one more test than the six you
+were given. Work out the expected value by hand before you run it.
+"""
+tests = "all"
+min_tests = 7
+learned = "writing a test, with the expected answer worked out independently"
+hints = [
+    "Copy an existing test and change the inputs. TPU has a density of about 1.21 g/cm³.",
+    "Work out the expected value with a calculator first, then type it into the test. A test that copies the code's own answer proves nothing.",
+    "One metre of 1.75 mm TPU: 2.405 cm³ × 1.21 ≈ 2.91 g.",
+]

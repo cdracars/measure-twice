@@ -1,0 +1,59 @@
+# Guided steps for ./scripts/guide. Test phrases are matched against test
+# names in every language, ignoring case, underscores and a test_ prefix.
+# A hint is either one text, or a table with a text per language and a default.
+
+title = "Nozzle temperature"
+
+[files]
+php = { edit = "php/temperature.php", tests = "php/test.php" }
+python = { edit = "python/temperature.py", tests = "python/test_temperature.py" }
+ts = { edit = "ts/temperature.ts", tests = "ts/temperature.test.ts" }
+rust = { edit = "rust/src/lib.rs", tests = "rust/tests/temperature.rs" }
+
+[[exercise]]
+title = "Too cold, ok, too hot"
+task = """
+Implement nozzle_verdict. The lesson README has each material's range. Both
+ends of a range count as ok, and a material that isn't in the table is an
+"unknown material".
+"""
+tests = "all"
+exclude = ["enclosure"]
+learned = "branching with match, and why tests sit on the boundaries"
+hints = [
+    "There are two decisions: first find the material's range (or report an unknown material), then compare the temperature with it.",
+    { php = "match ($material) { 'PLA' => [190, 220], ..., default => null } gives you the range, or null for an unknown material.", python = "A match statement can set low, high = 190, 220 in each case, with case _: return \"unknown material\" for anything else.", ts = "A switch on the material can set min and max in each case, with a default case that returns \"unknown material\".", rust = "let (min, max) = match material { \"PLA\" => (190, 220), ..., _ => return \"unknown material\" };", default = "A match or switch on the material can give you its (min, max) pair." },
+    "Too cold means temperature < min; too hot means temperature > max; anything else is ok. The 189 and 190 tests tell you whether < or <= is right.",
+]
+
+[[exercise]]
+title = "Test first: needs_enclosure"
+kind = "tests-first"
+task = """
+Before writing any code for needs_enclosure, write at least two more tests for
+it, so there are three or more. Put "enclosure" in each test's name so the
+guide can find it. Watch them fail, then implement the function.
+"""
+tests = ["enclosure"]
+min_tests = 3
+learned = "writing tests before code, and watching them fail first"
+hints = [
+    "What could this function get wrong? Every material in the table is a case, and so is a material that isn't in it.",
+    "Copy the given ABS test, then change the material and the expected answer. PLA, PETG and TPU should all be false.",
+    "Once your tests fail, the code is a single comparison: is the material ABS?",
+]
+
+[[exercise]]
+title = "Refactor"
+kind = "confirm"
+task = """
+Every test passes. Make the code clearer without changing what it does, and
+run the tests after each change.
+"""
+tests = "all"
+learned = "refactoring with tests as a safety net"
+checklist = [
+    "Each material's range appears once, not repeated across branches",
+    "Names say what values mean: min and max, not a and b",
+    "The tests still pass",
+]

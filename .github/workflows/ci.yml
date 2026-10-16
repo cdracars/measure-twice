@@ -31,6 +31,10 @@ jobs:
         run: npm ci && npm run typecheck
       - name: Rust format and lint
         run: cargo fmt --all --check && cargo clippy --workspace --all-targets -- -D warnings
+      - name: Guide tests
+        run: python -m unittest discover -s scripts
+      - name: Guide steps find their tests
+        run: ./scripts/guide verify --structure
 
   # main holds the unsolved exercises, so its tests fail on purpose.
   # Everywhere else (the solutions branch, your own branches, pull requests)
@@ -56,6 +60,8 @@ jobs:
       - name: Install Node packages
         run: npm ci
       - run: ./scripts/check
+      - name: Every guided step passes with the reference solutions
+        run: ./scripts/guide verify
 
   # Stage 1 promises PHP 8.3 support (ADR 0001); stage 2 needs 8.4 (ADR 0003).
   stage-1-php-8-3:

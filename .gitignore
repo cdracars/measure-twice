@@ -7,3 +7,4 @@ vendor/
 .venv/
 .phpunit.result.cache
 .phpunit.cache/
+.guide-progress.json

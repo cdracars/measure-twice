@@ -70,10 +70,42 @@ web frameworks and need PHP 8.4.1+; each lesson lists what to install. See
 
 On Windows, use WSL or Git Bash: `scripts/check` is a bash script.
 
-## Your first 15 minutes
+## Start with the guide
 
-This walks through lesson 01 in one language. Pick the one you know best;
-the examples use PHP.
+The easiest way in is the guide, a small terminal program that walks you
+through the lessons one step at a time:
+
+```sh
+./scripts/guide
+```
+
+The first time, it asks which languages you'll use (strongest first) and
+checks they're installed. Then it shows your current step, and every time you
+save a file it re-runs that step's tests and shows what failed: expected,
+got, and where. When the step passes, it moves you on.
+
+Keep it running in a terminal next to your editor; any editor works. While
+it's running, type a letter and press Enter:
+
+| Key | Does |
+| --- | --- |
+| `h` | Show the next hint. Each step has three, from a nudge to nearly the answer. |
+| `e` | Open the file you edit, in `$EDITOR` or VS Code |
+| `o` | Show the full test output |
+| `d` | Confirm a checklist step, such as a refactor |
+| `q` | Quit. Your progress is saved. |
+
+`./scripts/guide status` shows where you are; `./scripts/guide help` lists
+the rest. Some steps make you write the tests yourself, and the guide only
+counts them once it has seen them fail: that's test-first, enforced.
+
+Lessons 01 and 02 are guided so far. For the others, follow the lesson README
+as described below.
+
+## Your first 15 minutes without the guide
+
+This walks through lesson 01 by hand, in one language. Pick the one you know
+best; the examples use PHP.
 
 1. **Open the project.** Open the `measure-twice` folder in your editor
    (`code .` for VS Code) and keep a terminal open in the same folder.
@@ -146,6 +178,7 @@ ask for it explicitly, and then write it again yourself without looking.
 ```text
 lessons/NN-name/     one lesson: README.md plus php/ python/ ts/ rust/
 scripts/check        test runner
+scripts/guide        the guided way through the lessons (lessons/*/guide.toml)
 CURRICULUM.md        the stages and what each lesson covers
 GLOSSARY.md          workshop and course vocabulary
 docs/adr/            decisions about how this course is built, and why
