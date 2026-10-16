@@ -1,0 +1,53 @@
+#!/usr/bin/env bash
+# Run lesson tests.
+#
+#   scripts/check              every lesson, every language
+#   scripts/check 01           lesson 01, every language
+#   scripts/check 01 rust      lesson 01, Rust only
+#
+# Languages: php, python, ts, rust.
+set -uo pipefail
+cd "$(dirname "$0")/.."
+
+lesson="${1:-}"
+only="${2:-}"
+languages=(php python ts rust)
+
+if [[ -n "$only" && ! " ${languages[*]} " =~ " $only " ]]; then
+  echo "unknown language '$only' (expected one of: ${languages[*]})" >&2
+  exit 2
+fi
+
+shopt -s nullglob
+dirs=(lessons/"$lesson"*/)
+if [[ ${#dirs[@]} -eq 0 ]]; then
+  echo "no lesson matches '$lesson'" >&2
+  exit 2
+fi
+
+run() {
+  case "$1" in
+    php) php "$2/php/test.php" ;;
+    python) (cd "$2/python" && python3 -m unittest -q) ;;
+    ts) node --test "$2"/ts/*.test.ts ;;
+    rust) cargo test -q --manifest-path "$2/rust/Cargo.toml" ;;
+  esac
+}
+
+passed=()
+failed=()
+for dir in "${dirs[@]}"; do
+  dir="${dir%/}"
+  for lang in "${languages[@]}"; do
+    [[ -n "$only" && "$lang" != "$only" ]] && continue
+    [[ -d "$dir/$lang" ]] || continue
+    name="$(basename "$dir") $lang"
+    echo "== $name"
+    if run "$lang" "$dir"; then passed+=("$name"); else failed+=("$name"); fi
+    echo
+  done
+done
+
+echo "passed: ${#passed[@]}   failed: ${#failed[@]}"
+for name in "${failed[@]}"; do echo "  FAIL $name"; done
+[[ ${#failed[@]} -eq 0 ]]

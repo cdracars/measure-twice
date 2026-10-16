@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  # Formatting, linting and type checks run everywhere, including the
+  # unsolved stubs on main.
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - name: PHP syntax
+        run: find lessons -name '*.php' -print0 | xargs -0 -n1 php -l
+      - name: Python lint and format
+        run: pipx run ruff check . && pipx run ruff format --check .
+      - name: TypeScript type check
+        run: npm ci && npm run typecheck
+      - name: Rust format and lint
+        run: cargo fmt --all --check && cargo clippy --workspace --all-targets -- -D warnings
+
+  # main holds the unsolved exercises, so its tests fail on purpose.
+  # Everywhere else (the solutions branch, your own branches, pull requests)
+  # the tests must pass. See docs/adr/0002-solutions-on-a-branch.md.
+  test:
+    if: github.ref != 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - uses: dtolnay/rust-toolchain@stable
+      - run: ./scripts/check
