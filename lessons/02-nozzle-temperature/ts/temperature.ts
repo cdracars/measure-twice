@@ -3,12 +3,31 @@
  * "too cold", "ok", "too hot", or "unknown material".
  */
 export function nozzleVerdict(material: string, nozzleC: number): string {
-  // TODO: replace this line with your implementation.
-  throw new Error("TODO: implement nozzleVerdict");
+  let min: number;
+  let max: number;
+  switch (material) {
+    case "PLA":
+      [min, max] = [190, 220];
+      break;
+    case "PETG":
+      [min, max] = [220, 250];
+      break;
+    case "ABS":
+      [min, max] = [230, 260];
+      break;
+    case "TPU":
+      [min, max] = [210, 230];
+      break;
+    default:
+      return "unknown material";
+  }
+
+  if (nozzleC < min) return "too cold";
+  if (nozzleC > max) return "too hot";
+  return "ok";
 }
 
 /** Whether a material needs an enclosed printer. */
 export function needsEnclosure(material: string): boolean {
-  // TODO: write the tests in temperature.test.ts first, then replace this line.
-  throw new Error("TODO: implement needsEnclosure");
+  return material === "ABS";
 }

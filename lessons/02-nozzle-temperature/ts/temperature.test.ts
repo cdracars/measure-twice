@@ -50,4 +50,10 @@ describe("needsEnclosure", () => {
   test("ABS needs an enclosure", () => {
     assert.equal(needsEnclosure("ABS"), true);
   });
+
+  for (const material of ["PLA", "PETG", "TPU", "Nylon"]) {
+    test(`${material} does not need an enclosure`, () => {
+      assert.equal(needsEnclosure(material), false);
+    });
+  }
 });

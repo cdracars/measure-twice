@@ -58,3 +58,15 @@ fn material_names_are_exact() {
 fn abs_needs_an_enclosure() {
     assert!(needs_enclosure("ABS"));
 }
+
+#[test]
+fn other_known_materials_do_not_need_an_enclosure() {
+    for material in ["PLA", "PETG", "TPU"] {
+        assert!(!needs_enclosure(material), "{material}");
+    }
+}
+
+#[test]
+fn an_unknown_material_does_not_need_an_enclosure() {
+    assert!(!needs_enclosure("Nylon"));
+}

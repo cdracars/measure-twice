@@ -76,6 +76,22 @@ test('ABS needs an enclosure', function () {
     assert_same(true, needs_enclosure('ABS'));
 });
 
+test('PLA does not need an enclosure', function () {
+    assert_same(false, needs_enclosure('PLA'));
+});
+
+test('PETG does not need an enclosure', function () {
+    assert_same(false, needs_enclosure('PETG'));
+});
+
+test('TPU does not need an enclosure', function () {
+    assert_same(false, needs_enclosure('TPU'));
+});
+
+test('an unknown material does not need an enclosure', function () {
+    assert_same(false, needs_enclosure('Nylon'));
+});
+
 if ($failures > 0) {
     echo "\n{$failures} failed\n";
     exit(1);

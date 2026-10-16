@@ -41,6 +41,18 @@ class NeedsEnclosureTest(unittest.TestCase):
     def test_abs_needs_an_enclosure(self):
         self.assertTrue(needs_enclosure("ABS"))
 
+    def test_pla_does_not_need_an_enclosure(self):
+        self.assertFalse(needs_enclosure("PLA"))
+
+    def test_petg_does_not_need_an_enclosure(self):
+        self.assertFalse(needs_enclosure("PETG"))
+
+    def test_tpu_does_not_need_an_enclosure(self):
+        self.assertFalse(needs_enclosure("TPU"))
+
+    def test_an_unknown_material_does_not_need_an_enclosure(self):
+        self.assertFalse(needs_enclosure("Nylon"))
+
 
 if __name__ == "__main__":
     unittest.main()

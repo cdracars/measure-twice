@@ -8,8 +8,25 @@ declare(strict_types=1);
  */
 function nozzle_verdict(string $material, int $nozzleC): string
 {
-    // TODO: replace this line with your implementation.
-    throw new RuntimeException('TODO: implement nozzle_verdict');
+    $range = match ($material) {
+        'PLA' => [190, 220],
+        'PETG' => [220, 250],
+        'ABS' => [230, 260],
+        'TPU' => [210, 230],
+        default => null,
+    };
+
+    if ($range === null) {
+        return 'unknown material';
+    }
+
+    [$min, $max] = $range;
+
+    return match (true) {
+        $nozzleC < $min => 'too cold',
+        $nozzleC > $max => 'too hot',
+        default => 'ok',
+    };
 }
 
 /**
@@ -17,6 +34,5 @@ function nozzle_verdict(string $material, int $nozzleC): string
  */
 function needs_enclosure(string $material): bool
 {
-    // TODO: write the tests in test.php first, then replace this line.
-    throw new RuntimeException('TODO: implement needs_enclosure');
+    return $material === 'ABS';
 }
