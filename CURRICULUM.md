@@ -32,7 +32,7 @@ write them.
 | 04 | Enums; making invalid states impossible to represent | Materials (PLA, PETG, ABS, TPU) and verdicts as types, not strings | **ready** |
 | 05 | Errors: exceptions vs errors as values; parsers that accept too much | Parse "12.5 g" and "petg", reject "-5 g", "nan" and "0x10"; a spool that refuses to go negative | **ready** |
 | 06 | Collections, loops vs pipelines, "no value"; choosing which cases to test | Totals, per-material grams, and the heaviest job in a print queue | **ready** |
-| 07 | Strings and ownership | Parse a log line like `2026-10-16: replaced nozzle` | planned |
+| 07 | Strings, Unicode, `String` vs `&str` | Parse and format a log line like `2026-10-16: replaced nozzle`; shorten text without breaking `°` or `🧵` | **ready** |
 | 08 | Files | Load a Build Log file | planned |
 | 09 | Putting it together | A tiny `jig` CLI built from lessons 01–08 | planned |
 
