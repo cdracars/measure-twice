@@ -1,4 +1,5 @@
 import unittest
+from pathlib import Path
 
 from cli import USAGE, Output, run
 
@@ -71,6 +72,36 @@ class CheckTest(unittest.TestCase):
 
 class LogTest(unittest.TestCase):
     """No tests yet. Write them before the code."""
+
+    FIXTURES = Path(__file__).parent.parent.parent / "08-build-log" / "fixtures"
+
+    def test_summarizes_a_log_with_problems(self):
+        self.assertEqual(
+            Output(
+                1,
+                stdout="entries: 3\nproblems: 3\n  line 4: missing separator\n  line 6: bad date\n  line 7: empty text\n",
+            ),
+            run(["log", str(self.FIXTURES / "workshop.log")]),
+        )
+
+    def test_a_clean_log_succeeds(self):
+        self.assertEqual(
+            Output(0, stdout="entries: 2\nproblems: 0\n"),
+            run(["log", str(self.FIXTURES / "windows.log")]),
+        )
+
+    def test_an_empty_file(self):
+        self.assertEqual(
+            Output(0, stdout="entries: 0\nproblems: 0\n"),
+            run(["log", str(self.FIXTURES / "empty.log")]),
+        )
+
+    def test_a_missing_file_is_an_error(self):
+        path = str(self.FIXTURES / "no-such-file.log")
+        self.assertEqual(Output(2, stderr=f"jig: no such file: {path}\n"), run(["log", path]))
+
+    def test_needs_exactly_one_argument(self):
+        self.assertEqual(Output(2, stderr="jig: usage: jig log <file>\n"), run(["log"]))
 
 
 if __name__ == "__main__":

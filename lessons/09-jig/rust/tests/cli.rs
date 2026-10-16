@@ -118,3 +118,51 @@ fn check_needs_exactly_two_arguments() {
 }
 
 // log: no tests yet. Write them before the code.
+
+fn fixture(name: &str) -> String {
+    format!(
+        "{}/../../08-build-log/fixtures/{name}",
+        env!("CARGO_MANIFEST_DIR")
+    )
+}
+
+#[test]
+fn log_summarizes_a_log_with_problems() {
+    assert_eq!(
+        run(&["log", &fixture("workshop.log")]),
+        stdout(
+            1,
+            "entries: 3\nproblems: 3\n  line 4: missing separator\n  line 6: bad date\n  line 7: empty text\n"
+        )
+    );
+}
+
+#[test]
+fn log_of_a_clean_log_succeeds() {
+    assert_eq!(
+        run(&["log", &fixture("windows.log")]),
+        stdout(0, "entries: 2\nproblems: 0\n")
+    );
+}
+
+#[test]
+fn log_of_an_empty_file() {
+    assert_eq!(
+        run(&["log", &fixture("empty.log")]),
+        stdout(0, "entries: 0\nproblems: 0\n")
+    );
+}
+
+#[test]
+fn log_of_a_missing_file_is_an_error() {
+    let path = fixture("no-such-file.log");
+    assert_eq!(
+        run(&["log", &path]),
+        stderr(2, &format!("jig: no such file: {path}\n"))
+    );
+}
+
+#[test]
+fn log_needs_exactly_one_argument() {
+    assert_eq!(run(&["log"]), stderr(2, "jig: usage: jig log <file>\n"));
+}

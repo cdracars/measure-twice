@@ -105,6 +105,35 @@ test('check needs exactly two arguments', function () {
 
 // log: no tests yet. Write them before the code.
 
+function fixture(string $name): string
+{
+    return __DIR__ . "/../../08-build-log/fixtures/{$name}";
+}
+
+test('log summarizes a log with problems', function () {
+    assert_output(
+        new Output(1, stdout: "entries: 3\nproblems: 3\n  line 4: missing separator\n  line 6: bad date\n  line 7: empty text\n"),
+        run(['log', fixture('workshop.log')]),
+    );
+});
+
+test('log of a clean log succeeds', function () {
+    assert_output(new Output(0, stdout: "entries: 2\nproblems: 0\n"), run(['log', fixture('windows.log')]));
+});
+
+test('log of an empty file', function () {
+    assert_output(new Output(0, stdout: "entries: 0\nproblems: 0\n"), run(['log', fixture('empty.log')]));
+});
+
+test('log of a missing file is an error', function () {
+    $path = fixture('no-such-file.log');
+    assert_output(new Output(2, stderr: "jig: no such file: {$path}\n"), run(['log', $path]));
+});
+
+test('log needs exactly one argument', function () {
+    assert_output(new Output(2, stderr: "jig: usage: jig log <file>\n"), run(['log']));
+});
+
 if ($failures > 0) {
     echo "\n{$failures} failed\n";
     exit(1);

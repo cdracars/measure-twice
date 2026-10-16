@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { join } from "node:path";
 import { describe, test } from "node:test";
 
 import { type Output, USAGE, run } from "./cli.ts";
@@ -78,4 +79,30 @@ describe("check", () => {
 });
 
 // No tests yet. Write them before the code.
-describe("log", () => {});
+describe("log", () => {
+  const fixtures = join(import.meta.dirname, "..", "..", "08-build-log", "fixtures");
+
+  test("summarizes a log with problems", () => {
+    assert.deepEqual(
+      run(["log", join(fixtures, "workshop.log")]),
+      output(1, { stdout: "entries: 3\nproblems: 3\n  line 4: missing separator\n  line 6: bad date\n  line 7: empty text\n" }),
+    );
+  });
+
+  test("a clean log succeeds", () => {
+    assert.deepEqual(run(["log", join(fixtures, "windows.log")]), output(0, { stdout: "entries: 2\nproblems: 0\n" }));
+  });
+
+  test("an empty file", () => {
+    assert.deepEqual(run(["log", join(fixtures, "empty.log")]), output(0, { stdout: "entries: 0\nproblems: 0\n" }));
+  });
+
+  test("a missing file is an error", () => {
+    const path = join(fixtures, "no-such-file.log");
+    assert.deepEqual(run(["log", path]), output(2, { stderr: `jig: no such file: ${path}\n` }));
+  });
+
+  test("needs exactly one argument", () => {
+    assert.deepEqual(run(["log"]), output(2, { stderr: "jig: usage: jig log <file>\n" }));
+  });
+});
