@@ -102,7 +102,9 @@ You learn these by working inside them, not by reading about them:
 - A guide runner that walks learners through each lesson step by step
   ([ADR 0004](docs/adr/0004-a-guide-runner.md)); lessons 01–02 so far
 - Shared vocabulary in [GLOSSARY.md](GLOSSARY.md)
-- Later: conventional commits, a dev container, pre-commit hooks
+- A dev container, so the course opens ready to use in GitHub Codespaces
+  ([ADR 0005](docs/adr/0005-a-dev-container.md))
+- Later: conventional commits, pre-commit hooks
 
 ## Reading
 
