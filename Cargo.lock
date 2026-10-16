@@ -5,3 +5,7 @@ version = 4
 [[package]]
 name = "lesson-01-filament-math"
 version = "0.1.0"
+
+[[package]]
+name = "lesson-02-nozzle-temperature"
+version = "0.1.0"

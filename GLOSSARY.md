@@ -14,6 +14,10 @@ the first idea of domain modeling. Add terms as lessons introduce them.
 : Mass per volume of a material, in g/cm³. Used to convert filament length to
   weight. PLA is about 1.24, PETG about 1.27.
 
+**Enclosure**
+: A box around a printer that holds in warm air. ABS needs one to avoid
+  warping and cracking as it cools.
+
 **FDM (fused deposition modeling)**
 : 3D printing by melting plastic **filament** and laying it down layer by
   layer. Jig's first kind of **machine**.
@@ -37,6 +41,10 @@ the first idea of domain modeling. Add terms as lessons introduce them.
 **Material**
 : What a job uses up: filament, sheet stock, and so on.
 
+**Nozzle temperature**
+: How hot the printer's nozzle is, in °C. Each **material** has a range that
+  usually works; Jig's starting ranges are in lesson 02.
+
 **Slicer**
 : Software that turns a 3D model into **G-code** for a specific printer.
 
@@ -48,6 +56,10 @@ the first idea of domain modeling. Add terms as lessons introduce them.
 **ADR (architecture decision record)**
 : A short document recording one decision, its context, and its
   consequences. Lives in `docs/adr/`.
+
+**Boundary value**
+: An input at or just past the edge of a range, such as 190 and 189 for a
+  range starting at 190. Bugs cluster there, so tests should too.
 
 **Red, green, refactor**
 : The TDD loop. Red: a failing test. Green: the simplest code that passes.
