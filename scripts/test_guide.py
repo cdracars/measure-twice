@@ -438,6 +438,10 @@ class OpenLessonFilesTest(unittest.TestCase):
         self.watch([], env={**IN_VSCODE, "GUIDE_NO_OPEN": "1"})
         self.assertEqual([], self.code_calls())
 
+    def test_guide_no_open_set_to_0_leaves_it_on(self):
+        self.watch([], env={**IN_VSCODE, "GUIDE_NO_OPEN": "0"})
+        self.assertEqual(1, len(self.code_calls()))
+
     def test_the_no_open_flag_turns_it_off(self):
         with mock.patch.object(guide, "watch", return_value=0) as watch:
             guide.main(["--no-open"])

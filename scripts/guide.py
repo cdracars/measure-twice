@@ -700,7 +700,7 @@ def lesson_files(exercise: Exercise, language: str) -> list[Path]:
 
 def can_open_in_vscode() -> bool:
     """Inside VS Code's own terminal, where `code` opens files in the same window."""
-    if os.environ.get("GUIDE_NO_OPEN"):
+    if os.environ.get("GUIDE_NO_OPEN", "") not in ("", "0"):
         return False
     return os.environ.get("TERM_PROGRAM") == "vscode" and shutil.which("code") is not None
 
