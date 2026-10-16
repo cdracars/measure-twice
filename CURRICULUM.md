@@ -60,7 +60,7 @@ design and which are just the language.
 | A8 | Domain events, inside one program | "Job finished" triggers inventory and log updates without a queue |
 | A9 | Modular monolith vs services | When splitting pays off, and why usually not yet |
 | A10 | Tests that enforce the architecture | CI fails if the domain imports storage code |
-| A11 | Frontend architecture | React state and component boundaries |
+| A11 | Frontend architecture | The same dashboard two ways: a React app (TypeScript) and server-rendered HTML (PHP, Python, Rust). Where state lives, component vs template boundaries, and what each approach costs |
 
 Woven into these lessons: refactoring, test doubles (fakes and mocks),
 value objects, state machines, property-based testing, error-handling
