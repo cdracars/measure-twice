@@ -28,7 +28,9 @@ fi
 run() {
   case "$1" in
     php) php "$2/php/test.php" ;;
-    python) (cd "$2/python" && python3 -m unittest -q) ;;
+    # No bytecode cache: a .pyc can go stale if a file is edited and undone
+    # within the same second, and then the tests run the old code.
+    python) (cd "$2/python" && PYTHONDONTWRITEBYTECODE=1 python3 -m unittest -q) ;;
     ts) node --test "$2"/ts/*.test.ts ;;
     rust) cargo test -q --manifest-path "$2/rust/Cargo.toml" ;;
   esac
