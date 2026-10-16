@@ -119,6 +119,23 @@ test('parse_material accepts PLA', function () {
     assert_same(Material::PLA, parse_material('PLA'));
 });
 
+test('parse_material ignores case', function () {
+    assert_same(Material::PETG, parse_material('petg'));
+    assert_same(Material::TPU, parse_material('Tpu'));
+});
+
+test('parse_material ignores surrounding spaces', function () {
+    assert_same(Material::ABS, parse_material('  ABS '));
+});
+
+test('parse_material rejects an unknown material', function () {
+    assert_throws(UnknownMaterial::class, fn () => parse_material('Nylon'));
+});
+
+test('parse_material rejects empty input', function () {
+    assert_throws(UnknownMaterial::class, fn () => parse_material(''));
+});
+
 if ($failures > 0) {
     echo "\n{$failures} failed\n";
     exit(1);

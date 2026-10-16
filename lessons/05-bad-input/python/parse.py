@@ -1,3 +1,4 @@
+import re
 from enum import Enum
 
 
@@ -40,8 +41,18 @@ def parse_grams(text: str) -> float:
 
     Raises an InvalidAmount subclass if the text isn't a valid weight.
     """
-    # TODO: replace this line with your implementation.
-    raise NotImplementedError("TODO: implement parse_grams")
+    text = text.strip()
+    if not text:
+        raise EmptyInput("no weight given")
+
+    number = text.removesuffix("g").rstrip()
+    if not re.fullmatch(r"-?\d+(\.\d+)?", number):
+        raise NotANumber(f"not a weight: {text!r}")
+
+    grams = float(number)
+    if grams < 0:
+        raise NegativeAmount(f"weight can't be negative: {text!r}")
+    return grams
 
 
 def parse_material(text: str) -> Material:
@@ -49,8 +60,10 @@ def parse_material(text: str) -> Material:
 
     Raises UnknownMaterial if the text isn't a known material.
     """
-    # TODO: write the tests in test_parse.py first, then replace this line.
-    raise NotImplementedError("TODO: implement parse_material")
+    try:
+        return Material(text.strip().upper())
+    except ValueError:
+        raise UnknownMaterial(f"unknown material: {text!r}") from None
 
 
 class Spool:
@@ -63,5 +76,6 @@ class Spool:
 
     def consume(self, grams: float) -> None:
         """Use up filament, or raise NotEnoughFilament and leave the spool unchanged."""
-        # TODO: replace this line with your implementation.
-        raise NotImplementedError("TODO: implement Spool.consume")
+        if grams > self._grams_remaining:
+            raise NotEnoughFilament(f"need {grams} g, only {self._grams_remaining} g left")
+        self._grams_remaining -= grams

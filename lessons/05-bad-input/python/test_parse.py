@@ -8,6 +8,7 @@ from parse import (
     NotANumber,
     NotEnoughFilament,
     Spool,
+    UnknownMaterial,
     parse_grams,
     parse_material,
 )
@@ -77,6 +78,21 @@ class ParseMaterialTest(unittest.TestCase):
 
     def test_accepts_pla(self):
         self.assertIs(Material.PLA, parse_material("PLA"))
+
+    def test_ignores_case(self):
+        self.assertIs(Material.PETG, parse_material("petg"))
+        self.assertIs(Material.TPU, parse_material("Tpu"))
+
+    def test_ignores_surrounding_spaces(self):
+        self.assertIs(Material.ABS, parse_material("  ABS "))
+
+    def test_rejects_an_unknown_material(self):
+        with self.assertRaises(UnknownMaterial):
+            parse_material("Nylon")
+
+    def test_rejects_empty_input(self):
+        with self.assertRaises(UnknownMaterial):
+            parse_material("")
 
 
 if __name__ == "__main__":

@@ -1,5 +1,5 @@
 use lesson_05_bad_input::{
-    GramsError, Material, NotEnoughFilament, Spool, parse_grams, parse_material,
+    GramsError, Material, NotEnoughFilament, Spool, UnknownMaterial, parse_grams, parse_material,
 };
 
 #[test]
@@ -74,4 +74,28 @@ fn a_refused_consume_leaves_the_spool_unchanged() {
 #[test]
 fn parse_material_accepts_pla() {
     assert_eq!(parse_material("PLA"), Ok(Material::Pla));
+}
+
+#[test]
+fn parse_material_ignores_case() {
+    assert_eq!(parse_material("petg"), Ok(Material::Petg));
+    assert_eq!(parse_material("Tpu"), Ok(Material::Tpu));
+}
+
+#[test]
+fn parse_material_ignores_surrounding_spaces() {
+    assert_eq!(parse_material("  ABS "), Ok(Material::Abs));
+}
+
+#[test]
+fn parse_material_rejects_an_unknown_material() {
+    assert_eq!(
+        parse_material("Nylon"),
+        Err(UnknownMaterial("Nylon".to_string()))
+    );
+}
+
+#[test]
+fn parse_material_rejects_empty_input() {
+    assert!(parse_material("").is_err());
 }

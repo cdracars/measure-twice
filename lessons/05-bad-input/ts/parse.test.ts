@@ -70,4 +70,21 @@ describe("parseMaterial", () => {
   test("accepts PLA", () => {
     assert.deepEqual(parseMaterial("PLA"), { ok: true, value: "PLA" });
   });
+
+  test("ignores case", () => {
+    assert.deepEqual(parseMaterial("petg"), { ok: true, value: "PETG" });
+    assert.deepEqual(parseMaterial("Tpu"), { ok: true, value: "TPU" });
+  });
+
+  test("ignores surrounding spaces", () => {
+    assert.deepEqual(parseMaterial("  ABS "), { ok: true, value: "ABS" });
+  });
+
+  test("rejects an unknown material", () => {
+    assert.deepEqual(parseMaterial("Nylon"), { ok: false, error: "unknown material" });
+  });
+
+  test("rejects empty input", () => {
+    assert.deepEqual(parseMaterial(""), { ok: false, error: "unknown material" });
+  });
 });

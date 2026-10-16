@@ -12,14 +12,22 @@ export type NotEnoughFilament = { needed: number; remaining: number };
 
 /** Grams from text like "250", "12.5 g" or " 40g ". */
 export function parseGrams(text: string): Result<number, GramsError> {
-  // TODO: replace this line with your implementation.
-  throw new Error("TODO: implement parseGrams");
+  const trimmed = text.trim();
+  if (trimmed === "") return { ok: false, error: "empty" };
+
+  const number = trimmed.endsWith("g") ? trimmed.slice(0, -1).trimEnd() : trimmed;
+  if (!/^-?\d+(\.\d+)?$/.test(number)) return { ok: false, error: "not a number" };
+
+  const grams = Number(number);
+  if (grams < 0) return { ok: false, error: "negative" };
+  return { ok: true, value: grams };
 }
 
 /** A material from text like "PLA" or " petg ". */
 export function parseMaterial(text: string): Result<Material, "unknown material"> {
-  // TODO: write the tests in parse.test.ts first, then replace this line.
-  throw new Error("TODO: implement parseMaterial");
+  const name = text.trim().toUpperCase();
+  const material = MATERIALS.find((m) => m === name);
+  return material === undefined ? { ok: false, error: "unknown material" } : { ok: true, value: material };
 }
 
 export class Spool {
@@ -35,7 +43,10 @@ export class Spool {
 
   /** Use up filament, or return an error and leave the spool unchanged. */
   consume(grams: number): Result<void, NotEnoughFilament> {
-    // TODO: replace this line with your implementation.
-    throw new Error("TODO: implement Spool.consume");
+    if (grams > this.#gramsRemaining) {
+      return { ok: false, error: { needed: grams, remaining: this.#gramsRemaining } };
+    }
+    this.#gramsRemaining -= grams;
+    return { ok: true, value: undefined };
   }
 }

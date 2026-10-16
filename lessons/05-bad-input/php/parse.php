@@ -44,8 +44,22 @@ final class NotEnoughFilament extends DomainException
  */
 function parse_grams(string $text): float
 {
-    // TODO: replace this line with your implementation.
-    throw new RuntimeException('TODO: implement parse_grams');
+    $text = trim($text);
+    if ($text === '') {
+        throw new EmptyInput('no weight given');
+    }
+
+    $number = str_ends_with($text, 'g') ? rtrim(substr($text, 0, -1)) : $text;
+    if (preg_match('/^-?\d+(\.\d+)?$/', $number) !== 1) {
+        throw new NotANumber("not a weight: '{$text}'");
+    }
+
+    $grams = (float) $number;
+    if ($grams < 0) {
+        throw new NegativeAmount("weight can't be negative: '{$text}'");
+    }
+
+    return $grams;
 }
 
 /**
@@ -55,8 +69,8 @@ function parse_grams(string $text): float
  */
 function parse_material(string $text): Material
 {
-    // TODO: write the tests in test.php first, then replace this line.
-    throw new RuntimeException('TODO: implement parse_material');
+    return Material::tryFrom(strtoupper(trim($text)))
+        ?? throw new UnknownMaterial("unknown material: '{$text}'");
 }
 
 final class Spool
@@ -77,7 +91,12 @@ final class Spool
      */
     public function consume(float $grams): void
     {
-        // TODO: replace this line with your implementation.
-        throw new RuntimeException('TODO: implement Spool::consume');
+        if ($grams > $this->gramsRemaining) {
+            throw new NotEnoughFilament(
+                "need {$grams} g, only {$this->gramsRemaining} g left",
+            );
+        }
+
+        $this->gramsRemaining -= $grams;
     }
 }

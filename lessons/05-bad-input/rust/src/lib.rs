@@ -32,14 +32,32 @@ pub struct NotEnoughFilament {
 
 /// Grams from text like `"250"`, `"12.5 g"` or `" 40g "`.
 pub fn parse_grams(text: &str) -> Result<f64, GramsError> {
-    // TODO: replace this line with your implementation.
-    todo!("parse_grams({text:?})")
+    let text = text.trim();
+    if text.is_empty() {
+        return Err(GramsError::Empty);
+    }
+
+    let number = text.strip_suffix('g').unwrap_or(text).trim_end();
+    let grams: f64 = number.parse().map_err(|_| GramsError::NotANumber)?;
+    // `parse` accepts "nan" and "inf", which aren't weights.
+    if !grams.is_finite() {
+        return Err(GramsError::NotANumber);
+    }
+    if grams < 0.0 {
+        return Err(GramsError::Negative);
+    }
+    Ok(grams)
 }
 
 /// A material from text like `"PLA"` or `" petg "`.
 pub fn parse_material(text: &str) -> Result<Material, UnknownMaterial> {
-    // TODO: write the tests in tests/parse.rs first, then replace this line.
-    todo!("parse_material({text:?})")
+    match text.trim().to_ascii_uppercase().as_str() {
+        "PLA" => Ok(Material::Pla),
+        "PETG" => Ok(Material::Petg),
+        "ABS" => Ok(Material::Abs),
+        "TPU" => Ok(Material::Tpu),
+        _ => Err(UnknownMaterial(text.to_string())),
+    }
 }
 
 pub struct Spool {
@@ -57,7 +75,13 @@ impl Spool {
 
     /// Use up filament, or return an error and leave the spool unchanged.
     pub fn consume(&mut self, grams: f64) -> Result<(), NotEnoughFilament> {
-        // TODO: replace this line with your implementation.
-        todo!("Spool::consume({grams})")
+        if grams > self.grams_remaining {
+            return Err(NotEnoughFilament {
+                needed: grams,
+                remaining: self.grams_remaining,
+            });
+        }
+        self.grams_remaining -= grams;
+        Ok(())
     }
 }
