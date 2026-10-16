@@ -34,7 +34,7 @@ write them.
 | 06 | Collections, loops vs pipelines, "no value"; choosing which cases to test | Totals, per-material grams, and the heaviest job in a print queue | **ready** |
 | 07 | Strings, Unicode, `String` vs `&str` | Parse and format a log line like `2026-10-16: replaced nozzle`; shorten text without breaking `°` or `🧵` | **ready** |
 | 08 | Files, line endings, tests that touch the file system | Load a Build Log, reporting bad lines by number; append new entries | **ready** |
-| 09 | Putting it together | A tiny `jig` CLI built from lessons 01–08 | planned |
+| 09 | Putting it together: a pure `run` function behind a thin entry point; exit codes, stdout vs stderr; writing every test for a command | A small `jig` command-line tool built from lessons 01–08 | **ready** |
 
 Also introduced in this stage: the testing pyramid (why most tests should be
 small and fast).
