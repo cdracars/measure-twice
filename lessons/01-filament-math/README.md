@@ -1,6 +1,6 @@
 # Lesson 01: Filament math
 
-**Stage 1 · Basics + TDD rhythm** · Languages: PHP → Python → TypeScript → Rust
+**Stage 1 · Basics + TDD rhythm** · Languages: PHP · Python · TypeScript · Rust
 
 ## The problem
 
@@ -39,12 +39,14 @@ Ignore bad input such as negative lengths for now. Handling it is Lesson 05.
 
 ## How to work through it
 
-Do the languages in order: PHP, then Python, then TypeScript, then Rust. For
-each one:
+Start with the language you know best, then do the ones you're learning, with
+your weakest last. The first time through, you're working out the problem;
+after that, you're learning how each language expresses the same answer.
+For each language:
 
 1. **Red:** run the tests and watch them fail. Read the failure message.
    ```sh
-   ./scripts/check 01 php
+   ./scripts/check 01 rust     # or php, python, ts
    ```
 2. **Green:** open the stub file, replace the `TODO` with the simplest code
    that passes.
@@ -67,15 +69,20 @@ each one:
 Fill this in yourself as you go. Noticing differences is the point of writing
 it four times. Prompts:
 
-- **Number types:** PHP and Python have one float type. TypeScript has
-  `number`. Rust makes you choose (`f64` here), and won't mix it with integers
-  without an explicit conversion. What happens if you write `1000` instead of
-  `1000.0` in Rust?
-- **π:** where does each language keep it?
-- **Comparing floats:** why do the tests check "close to" instead of `==`?
-- **Where tests live:** the tests are a separate file in every language here.
-  Idiomatic Rust often puts unit tests in the same file as the code. Why might
-  that be useful?
+| Question | PHP | Python | TypeScript | Rust |
+| --- | --- | --- | --- | --- |
+| What number type holds `1.75`? | | | | |
+| Can you write `1000` where a float is expected? | | | | |
+| Where does π live? | | | | |
+| What happens when an unfinished stub runs? | | | | |
+| Where do tests usually live: same file or separate? | | | | |
+
+Then answer in your own words:
+
+- Which languages let you mix integers and floats freely, and which make you
+  convert? What does each choice protect you from, or cost you?
+- Why do the tests check "close to" instead of `==`? Does that apply in all
+  four languages?
 
 ## Done when
 

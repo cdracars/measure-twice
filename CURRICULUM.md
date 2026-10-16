@@ -42,9 +42,12 @@ small and fast).
 ## Stage 2–4: Architecture track
 
 One evolving Jig codebase, restructured lesson by lesson with the tests green
-throughout. Main language: **PHP**, so attention stays on structure rather
-than syntax. Selected lessons are ported to Rust and TypeScript to compare how
-each expresses the same design.
+throughout. Work in **your strongest language**, so attention stays on
+structure rather than syntax. Reference solutions for this track are in PHP
+only; writing every architecture lesson four times would quadruple the work
+for little gain. Selected lessons (A5, A6, and the state machine in A7) get
+solutions in all four languages, with a neutral comparison table of how each
+expresses the same design.
 
 | # | Lesson | Idea |
 | --- | --- | --- |
