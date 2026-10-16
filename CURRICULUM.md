@@ -99,10 +99,16 @@ You learn these by working inside them, not by reading about them:
 ## Reading
 
 - *The Rust Programming Language* (the official book): <https://doc.rust-lang.org/book/>
-- Martin Fowler's writing on refactoring and architecture
-- Alistair Cockburn, "Hexagonal Architecture" (the original ports-and-adapters article)
-- Gary Bernhardt, *Boundaries* (talk; source of "functional core, imperative shell")
-- Scott Wlaschin, *Domain Modeling Made Functional*
-- Michael Nygard, "Documenting Architecture Decisions" (the blog post that introduced ADRs)
+- Martin Fowler's writing on refactoring and architecture: <https://martinfowler.com/>,
+  and his book's site, <https://refactoring.com/>
+- Alistair Cockburn, "Hexagonal Architecture" (the original ports-and-adapters
+  article): <https://alistair.cockburn.us/hexagonal-architecture/>
+- Gary Bernhardt, *Boundaries* (talk, RubyConf 2012), on keeping a functional
+  core behind an imperative shell: <https://www.destroyallsoftware.com/talks/boundaries>
+- Scott Wlaschin, *Domain Modeling Made Functional* (Pragmatic Bookshelf, 2018;
+  examples in F#, ideas that carry straight over to Rust and TypeScript):
+  <https://pragprog.com/titles/swdddf/domain-modeling-made-functional/>
+- Michael Nygard, "Documenting Architecture Decisions" (2011, the blog post that
+  introduced ADRs): <https://cognitect.com/blog/2011/11/15/documenting-architecture-decisions>
 
-Links for the last five will be added once checked.
+Links checked 2026-10-16.
