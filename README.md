@@ -25,8 +25,10 @@ No 3D printer needed. Every lesson explains the workshop details it uses.
 
 ## How it works
 
-Each lesson is one problem, usually solved in all four languages, in order:
-PHP, Python, TypeScript, Rust. You get a stub and a set of failing tests.
+Each lesson is one problem, usually solved in all four languages. Start with
+the language you know best, so the problem is clear before the syntax gets
+in the way, then do the ones you're learning, with your weakest last. You get a
+stub and a set of failing tests.
 
 1. **Red:** run the tests, read why they fail.
 2. **Green:** write the simplest code that passes.
@@ -54,7 +56,8 @@ Then:
 git clone https://github.com/cdracars/measure-twice
 cd measure-twice
 git switch -c my-work          # keep your answers on your own branch
-./scripts/check 01 php         # see lesson 01 fail; now make it pass
+./scripts/check 01 rust        # your strongest language: php, python, ts, or rust
+                               # see lesson 01 fail; now make it pass
 ```
 
 `npm install` is only needed for the TypeScript type checker (`npm run
