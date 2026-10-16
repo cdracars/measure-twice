@@ -1,0 +1,11 @@
+[package]
+name = "lesson-09-jig"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+[[bin]]
+name = "jig"
+path = "src/main.rs"
+
+[dependencies]
