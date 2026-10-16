@@ -53,6 +53,10 @@ test('length and weight convert back and forth', function () {
 
 // Your turn: add one test of your own here.
 
+test('one metre of 1.75 mm TPU weighs about 2.91 g', function () {
+    assert_close(2.91, filament_grams(1000.0, 1.75, 1.21));
+});
+
 if ($failures > 0) {
     echo "\n{$failures} failed\n";
     exit(1);

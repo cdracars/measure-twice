@@ -42,3 +42,8 @@ fn length_and_weight_convert_back_and_forth() {
 }
 
 // Your turn: add one test of your own here.
+
+#[test]
+fn one_metre_of_tpu_weighs_about_2_91_g() {
+    assert_close(2.91, filament_grams(1000.0, 1.75, 1.21), 0.01);
+}
