@@ -68,6 +68,59 @@ Stage 1 needs only the four languages. From stage 2, lessons use real test and
 web frameworks and need PHP 8.4.1+; each lesson lists what to install. See
 [ADR 0003](docs/adr/0003-realistic-tools-from-stage-2.md).
 
+On Windows, use WSL or Git Bash: `scripts/check` is a bash script.
+
+## Your first 15 minutes
+
+This walks through lesson 01 in one language. Pick the one you know best;
+the examples use PHP.
+
+1. **Open the project.** Open the `measure-twice` folder in your editor
+   (`code .` for VS Code) and keep a terminal open in the same folder.
+
+2. **Read the lesson.** Open `lessons/01-filament-math/README.md`. It explains
+   the problem, gives the formula, and lists the file you edit for each
+   language.
+
+3. **Red: watch it fail.**
+
+   ```sh
+   ./scripts/check 01 php
+   ```
+
+   Every test fails with a `TODO: implement …` message. That's the starting
+   point: the tests exist, the code doesn't yet.
+
+4. **Green: make it pass.** Open `lessons/01-filament-math/php/filament.php`,
+   replace the `throw` line with your code, and run the check again. Read
+   which test still fails and what it expected, change the code, and repeat
+   until the summary says `passed: 1`. Read the test file as much as you like,
+   but don't change the existing tests: they're the spec.
+
+5. **Refactor.** With everything green, make the code clearer: name the
+   in-between values, remove repetition. Re-run the check after each change.
+
+6. **Add a test of your own.** The lesson README suggests one. Work out the
+   expected value by hand before you run it.
+
+7. **Save your progress.**
+
+   ```sh
+   git add -A
+   git commit -m "Lesson 01 in PHP"
+   ```
+
+8. **Next language.** Repeat with `./scripts/check 01 python`, `ts`, and
+   `rust`, filling in the lesson's comparison table as you go. The first Rust
+   run takes a minute while it compiles.
+
+Stuck? Re-read the failing test's message first: it says what was expected
+and what came back. After that, ask an AI assistant (see below), or look at
+the [`solutions`](../../tree/solutions) branch as a last resort.
+
+If you fork this repository and push your branch, CI runs your tests on
+GitHub too.
+
 ## Running the tests
 
 ```sh
