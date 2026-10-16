@@ -3,8 +3,11 @@
 Usage: ./scripts/guide [command]
 
   (no command)   show your current exercise and re-run its tests every time
-                 you save. Keys (then Enter): h hint · e edit · o full output ·
-                 d done (checklists) · q quit
+                 you save. Keys (then Enter): h hint · e edit · r read the
+                 lesson README · o full output · d done (checklists) · q quit.
+                 In VS Code's terminal (and Codespaces) each step opens the
+                 lesson README and the file you edit; --no-open, or setting
+                 GUIDE_NO_OPEN=1, turns that off.
   start [langs]  choose your languages, strongest first: start php python ts rust
   status         what you've done and what's next
   hint           show the next hint for the current exercise
@@ -532,9 +535,9 @@ def describe(
     lines = [header(exercise, language, progress, exercises), "", exercise.task, ""]
     files = exercise.files.get(language, {})
     if files:
+        lines.append(f"Read   lessons/{exercise.lesson}/README.md")
         lines.append(f"Edit   lessons/{exercise.lesson}/{files.get('edit', '')}")
         lines.append(f"Tests  lessons/{exercise.lesson}/{files.get('tests', '')}")
-        lines.append(f"Read   lessons/{exercise.lesson}/README.md")
         lines.append("")
     if exercise.checklist:
         lines.append("Checklist:")
@@ -688,13 +691,43 @@ def open_in_editor(path: Path) -> None:
     subprocess.run([*command, str(path)], check=False)
 
 
-def watch(exercises: list[Exercise], progress: Progress) -> int:
+def lesson_files(exercise: Exercise, language: str) -> list[Path]:
+    """The lesson README, then the file the learner edits, if the lesson names one."""
+    lesson_dir = ROOT / "lessons" / exercise.lesson
+    edit = exercise.files.get(language, {}).get("edit")
+    return [lesson_dir / "README.md", *([lesson_dir / edit] if edit else [])]
+
+
+def can_open_in_vscode() -> bool:
+    """Inside VS Code's own terminal, where `code` opens files in the same window."""
+    if os.environ.get("GUIDE_NO_OPEN", "") not in ("", "0"):
+        return False
+    return os.environ.get("TERM_PROGRAM") == "vscode" and shutil.which("code") is not None
+
+
+def open_in_vscode(paths: list[Path]) -> bool:
+    """Open files in the VS Code window this terminal belongs to; False if that didn't work."""
+    try:
+        done = subprocess.run(
+            ["code", "--reuse-window", *(str(p) for p in paths)],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            check=False,
+            timeout=15,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return False
+    return done.returncode == 0
+
+
+def watch(exercises: list[Exercise], progress: Progress, open_files: bool = True) -> int:
     if not ensure_ready(progress):
         return 1
     files: dict[Path, float] = {}
     shown: str | None = None
     last = Run(False, "", "")
-    keys = "h hint · e edit · o full output · d done · q quit  (then Enter)"
+    opened: str | None = None
+    keys = "h hint · e edit · r README · o full output · d done · q quit  (then Enter)"
     while True:
         step = current_step(exercises, progress)
         if step is None:
@@ -706,6 +739,9 @@ def watch(exercises: list[Exercise], progress: Progress) -> int:
             if shown == step_key(*step):
                 latest = wait_until_quiet(exercise.lesson, language, latest)
             files, shown = latest, step_key(*step)
+            if open_files and opened != shown and can_open_in_vscode():
+                open_in_vscode(lesson_files(exercise, language))
+            opened = shown
             clear_screen()
             print(describe(exercise, language, progress, exercises))
             print(dim("Running the tests..."))
@@ -727,6 +763,8 @@ def watch(exercises: list[Exercise], progress: Progress) -> int:
             edit = exercise.files.get(language, {}).get("edit")
             if edit:
                 open_in_editor(ROOT / "lessons" / exercise.lesson / edit)
+        elif key == "r":
+            open_in_editor(ROOT / "lessons" / exercise.lesson / "README.md")
         elif key == "o":
             print(tail(last.output))
         elif key == "d":
@@ -814,6 +852,8 @@ def main(argv: list[str]) -> int:
         signal.signal(signal.SIGPIPE, signal.SIG_DFL)  # quiet exit when piped into head
     exercises = load_exercises(ROOT)
     progress = Progress.load(PROGRESS_FILE)
+    open_files = "--no-open" not in argv
+    argv = [arg for arg in argv if arg != "--no-open"]
     command, args = (argv[0], argv[1:]) if argv else ("watch", [])
 
     if command in ("help", "-h", "--help"):
@@ -846,7 +886,7 @@ def main(argv: list[str]) -> int:
         return 0
     if command == "watch":
         try:
-            return watch(exercises, progress)
+            return watch(exercises, progress, open_files)
         except KeyboardInterrupt:
             return 0
     if command == "status":

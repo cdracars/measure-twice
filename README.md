@@ -49,8 +49,13 @@ lesson.
 Click the badge to open the course in a GitHub Codespace: VS Code in your
 browser with PHP 8.4, Python, Node.js, Rust, Composer and uv already set up.
 The first start takes a few minutes while it builds; after that, open a
-terminal and run `./scripts/guide`. GitHub's free plan includes some Codespaces
-hours each month.
+terminal and run `./scripts/guide`.
+
+The codespace runs on your own GitHub account, not the course's: GitHub's
+"paid for by" notice will show your username. It comes out of your account's
+free monthly Codespaces allowance, and with GitHub's default $0 spending limit
+it stops when that runs out rather than charging you. Stop or delete the
+codespace when you're done to make the allowance last.
 
 The same setup runs on your own machine with VS Code's Dev Containers
 extension and Docker: open the folder, then choose *Reopen in Container*. The
@@ -100,13 +105,17 @@ checks they're installed. Then it shows your current step, and every time you
 save a file it re-runs that step's tests and shows what failed: expected,
 got, and where. When the step passes, it moves you on.
 
-Keep it running in a terminal next to your editor; any editor works. While
-it's running, type a letter and press Enter:
+Keep it running in a terminal next to your editor; any editor works. In VS
+Code's terminal, including a Codespace, each new step opens the lesson README
+and the file you edit for you. Elsewhere, the guide prints their paths. To
+stop it opening files, run `./scripts/guide --no-open` or set
+`GUIDE_NO_OPEN=1`. While it's running, type a letter and press Enter:
 
 | Key | Does |
 | --- | --- |
 | `h` | Show the next hint. Each step has three, from a nudge to nearly the answer. |
 | `e` | Open the file you edit, in `$EDITOR` or VS Code |
+| `r` | Open the lesson README, which explains the problem, in `$EDITOR` or VS Code |
 | `o` | Show the full test output |
 | `d` | Confirm a checklist step, such as a refactor |
 | `q` | Quit. Your progress is saved. |
