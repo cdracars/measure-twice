@@ -21,9 +21,14 @@
   "postCreateCommand": "bash .devcontainer/post-create.sh",
   "customizations": {
     "codespaces": {
-      "openFiles": ["README.md"]
+      "openFiles": ["README.md", "lessons/01-filament-math/README.md"]
     },
     "vscode": {
+      "settings": {
+        "workbench.editorAssociations": {
+          "**/lessons/*/README.md": "vscode.markdown.preview.editor"
+        }
+      },
       "extensions": [
         "rust-lang.rust-analyzer",
         "ms-python.python",
