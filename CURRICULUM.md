@@ -39,6 +39,12 @@ write them.
 Also introduced in this stage: the testing pyramid (why most tests should be
 small and fast).
 
+## Stage 2 opener
+
+| # | Topic | Workshop problem | Status |
+| --- | --- | --- | --- |
+| 10 | Test frameworks: PHPUnit, pytest, Vitest, Rust unit and doc tests; making tests fail on purpose | Lesson 01's filament math, tests ported | **ready** |
+
 ## Stage 2–4: Architecture track
 
 One evolving Jig codebase, restructured lesson by lesson with the tests green

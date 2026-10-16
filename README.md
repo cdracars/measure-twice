@@ -9,7 +9,8 @@ in **PHP, Python, TypeScript, and Rust** by building **Jig**, a manager for a
 maker's workshop: 3D printers and other machines, the jobs running on them,
 the materials they use up, and a log of what happened.
 
-**Status:** early. Lesson 01 is ready; the rest grow one lesson at a time. See
+**Status:** stage 1 (lessons 01–09) and the stage 2 opener (lesson 10) are
+ready; the architecture track grows one lesson at a time. See
 [CURRICULUM.md](CURRICULUM.md) for the plan.
 
 ## Who it's for

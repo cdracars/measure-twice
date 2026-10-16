@@ -6,12 +6,19 @@
 #   scripts/check 01 rust      lesson 01, Rust only
 #
 # Languages: php, python, ts, rust.
+#
+# Stage 1 lessons use only built-in tools. Stage 2 lessons use test
+# frameworks (ADR 0003), detected by their config files: php/composer.json
+# (PHPUnit), python/pyproject.toml (pytest via uv), ts/vitest.config.ts
+# (Vitest; run `npm install` first). Those need PHP 8.4.1+; if `php` is an
+# older version, point PHP at a newer one: PHP=php8.4 scripts/check
 set -uo pipefail
 cd "$(dirname "$0")/.."
 
 lesson="${1:-}"
 only="${2:-}"
 languages=(php python ts rust)
+PHP="${PHP:-php}"
 
 if [[ -n "$only" && ! " ${languages[*]} " =~ " $only " ]]; then
   echo "unknown language '$only' (expected one of: ${languages[*]})" >&2
@@ -25,13 +32,47 @@ if [[ ${#dirs[@]} -eq 0 ]]; then
   exit 2
 fi
 
+run_php() {
+  if [[ ! -f "$1/php/composer.json" ]]; then
+    "$PHP" "$1/php/test.php"
+    return
+  fi
+  (
+    cd "$1/php" || exit 1
+    if [[ ! -d vendor ]]; then
+      "$PHP" "$(command -v composer)" install --quiet --no-interaction || exit 1
+    fi
+    "$PHP" vendor/bin/phpunit
+  )
+}
+
+run_python() {
+  # No bytecode cache: a .pyc can go stale if a file is edited and undone
+  # within the same second, and then the tests run the old code.
+  if [[ ! -f "$1/python/pyproject.toml" ]]; then
+    (cd "$1/python" && PYTHONDONTWRITEBYTECODE=1 python3 -m unittest -q)
+    return
+  fi
+  (cd "$1/python" && PYTHONDONTWRITEBYTECODE=1 uv run --frozen --quiet pytest -q)
+}
+
+run_ts() {
+  if [[ ! -f "$1/ts/vitest.config.ts" ]]; then
+    node --test "$1"/ts/*.test.ts
+    return
+  fi
+  if [[ ! -x node_modules/.bin/vitest ]]; then
+    echo "Vitest isn't installed. Run 'npm install' in the repository root first." >&2
+    return 1
+  fi
+  (cd "$1/ts" && ../../../node_modules/.bin/vitest run)
+}
+
 run() {
   case "$1" in
-    php) php "$2/php/test.php" ;;
-    # No bytecode cache: a .pyc can go stale if a file is edited and undone
-    # within the same second, and then the tests run the old code.
-    python) (cd "$2/python" && PYTHONDONTWRITEBYTECODE=1 python3 -m unittest -q) ;;
-    ts) node --test "$2"/ts/*.test.ts ;;
+    php) run_php "$2" ;;
+    python) run_python "$2" ;;
+    ts) run_ts "$2" ;;
     rust) cargo test -q --manifest-path "$2/rust/Cargo.toml" ;;
   esac
 }
