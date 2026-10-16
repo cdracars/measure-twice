@@ -43,11 +43,10 @@ small and fast).
 
 One evolving Jig codebase, restructured lesson by lesson with the tests green
 throughout. Work in **your strongest language**, so attention stays on
-structure rather than syntax. Reference solutions for this track are in PHP
-only; writing every architecture lesson four times would quadruple the work
-for little gain. Selected lessons (A5, A6, and the state machine in A7) get
-solutions in all four languages, with a neutral comparison table of how each
-expresses the same design.
+structure rather than syntax. Every lesson has reference solutions in all four
+languages, and a neutral comparison table of how each expresses the same
+design. Seeing one architecture in four languages shows which parts are the
+design and which are just the language.
 
 | # | Lesson | Idea |
 | --- | --- | --- |
