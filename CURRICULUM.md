@@ -27,7 +27,7 @@ write them.
 | # | Topic | Workshop problem | Status |
 | --- | --- | --- | --- |
 | 01 | Functions, floats, red → green → refactor | Filament length ↔ weight | **ready** |
-| 02 | `if` and `match` | Pick a nozzle temperature range for a material | planned |
+| 02 | `if` and `match`, boundary values, writing your first tests | Is this nozzle temperature right for this material? Does it need an enclosure? | **ready** |
 | 03 | Structs and classes | A `Spool` with material, diameter, and grams remaining | planned |
 | 04 | Enums | Materials (PLA, PETG, ABS, TPU) and units | planned |
 | 05 | Errors: exceptions vs `Option`/`Result` | Reject "-5 g" and "abc" without crashing | planned |
