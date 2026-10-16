@@ -29,7 +29,7 @@ write them.
 | 01 | Functions, floats, red → green → refactor | Filament length ↔ weight | **ready** |
 | 02 | `if` and `match`, boundary values, writing your first tests | Is this nozzle temperature right for this material? Does it need an enclosure? | **ready** |
 | 03 | Structs and classes, encapsulation, mutation; writing all the tests for a method | A `Spool` that tracks what's left and can't be tampered with | **ready** |
-| 04 | Enums | Materials (PLA, PETG, ABS, TPU) and units | planned |
+| 04 | Enums; making invalid states impossible to represent | Materials (PLA, PETG, ABS, TPU) and verdicts as types, not strings | **ready** |
 | 05 | Errors: exceptions vs `Option`/`Result` | Reject "-5 g" and "abc" without crashing | planned |
 | 06 | Collections and loops | Total filament for a batch of jobs | planned |
 | 07 | Strings and ownership | Parse a log line like `2026-10-16: replaced nozzle` | planned |
