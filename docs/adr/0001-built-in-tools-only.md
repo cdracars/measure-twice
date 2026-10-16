@@ -4,7 +4,8 @@ Date: 2026-10-16
 
 ## Status
 
-Accepted
+Accepted. Narrowed to stage 1 by
+[ADR 0003](0003-realistic-tools-from-stage-2.md).
 
 ## Context
 
@@ -36,5 +37,5 @@ lessons:
 
 - Setup is four installs and `git clone`.
 - Tests read as plain code, with no framework conventions to learn first.
-- Learners don't practise the frameworks real projects use. A later lesson can
-  introduce them, recorded in a new ADR.
+- Learners don't practise the frameworks real projects use. ADR 0003
+  introduces them from stage 2.

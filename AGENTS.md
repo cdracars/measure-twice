@@ -21,7 +21,9 @@ through it, and the point is that **they** write the exercise code.
 ## When working on the course itself
 
 - Read `CURRICULUM.md`, `GLOSSARY.md`, and `docs/adr/` first.
-- Keep lessons built-in-tools only (ADR 0001).
+- Stage 1 lessons use built-in tools only (ADR 0001). Stage 2 on uses the
+  tools listed in ADR 0003; check their current versions when writing a
+  lesson.
 - New lessons go on `main` as stubs plus tests; implement them on `solutions`
   and keep that branch green (ADR 0002).
 - Verify with `./scripts/check` on `solutions`, plus the lint steps in
