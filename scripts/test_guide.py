@@ -369,6 +369,7 @@ class LessonFilesTest(unittest.TestCase):
             with self.subTest(exercise=e.key):
                 self.assertIn(e.kind, ("check", "tests-first", "confirm"))
                 self.assertTrue(e.title and e.task and e.lesson_title and e.learned)
+                self.assertTrue(e.lesson_intro, "a guided lesson says what it teaches and why")
                 if e.kind != "confirm":
                     self.assertEqual(3, len(e.hints), "check exercises get three hints")
                 for hint in e.hints:
@@ -421,10 +422,13 @@ class OpenLessonFilesTest(unittest.TestCase):
     def code_calls(self) -> list[list[str]]:
         return [c.args[0] for c in self.code.call_args_list if c.args[0][0] == "code"]
 
-    def test_a_step_opens_the_file_to_edit_then_the_lesson_readme_so_the_readme_shows(self):
+    def test_a_step_opens_the_stub_and_tests_then_the_readme_so_the_readme_shows(self):
         self.watch([])
-        readme, stub = self.lesson_dir / "README.md", self.lesson_dir / "php/filament.php"
-        self.assertEqual([["code", "--reuse-window", str(stub), str(readme)]], self.code_calls())
+        stub, tests = self.lesson_dir / "php/filament.php", self.lesson_dir / "php/test.php"
+        readme = self.lesson_dir / "README.md"
+        self.assertEqual(
+            [["code", "--reuse-window", str(stub), str(tests), str(readme)]], self.code_calls()
+        )
 
     def test_saving_re_runs_the_tests_without_opening_the_files_again(self):
         self.assertEqual(3, self.watch([None, None], saves=3))
@@ -477,8 +481,8 @@ class NextActionTest(unittest.TestCase):
 
     def test_a_check_step_says_which_file_to_change_and_that_saving_re_runs(self):
         self.assertEqual(
-            "Next: in php/filament.php, replace the TODO with your code, then save."
-            " The tests re-run here.",
+            "Next: read the tests in php/test.php, then write the code in php/filament.php"
+            " and save. The tests re-run here.",
             guide.next_action(exercise(files=PHP_FILES), "php"),
         )
 
@@ -495,7 +499,7 @@ class NextActionTest(unittest.TestCase):
         self.assertIn("Press d when it's done", action)
 
     def test_every_step_shows_its_next_line(self):
-        self.assertIn("Next: in php/filament.php", self.describe(exercise(files=PHP_FILES)))
+        self.assertIn("Next: read the tests", self.describe(exercise(files=PHP_FILES)))
 
     def test_the_first_step_explains_how_the_guide_works(self):
         self.assertIn("How this works", self.describe(exercise(files=PHP_FILES)))
@@ -503,6 +507,18 @@ class NextActionTest(unittest.TestCase):
     def test_once_a_step_is_done_the_explanation_goes_away(self):
         text = self.describe(exercise(files=PHP_FILES), done=["01.1:php"])
         self.assertNotIn("How this works", text)
+
+    def test_a_lesson_opens_with_what_it_teaches(self):
+        step = exercise(files=PHP_FILES, lesson_intro="This lesson is about TDD.")
+        self.assertIn("This lesson is about TDD.", self.describe(step))
+
+    def test_the_lesson_intro_goes_away_once_a_step_of_that_lesson_is_done(self):
+        step = exercise(number=2, files=PHP_FILES, lesson_intro="This lesson is about TDD.")
+        self.assertNotIn("This lesson is about TDD.", self.describe(step, done=["01.1:php"]))
+
+    def test_another_lessons_progress_does_not_hide_the_intro(self):
+        step = exercise(files=PHP_FILES, lesson_intro="This lesson is about TDD.")
+        self.assertIn("This lesson is about TDD.", self.describe(step, done=["00.1:php"]))
 
 
 if __name__ == "__main__":

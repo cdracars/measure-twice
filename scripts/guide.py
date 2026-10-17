@@ -195,6 +195,7 @@ class Exercise:
     hints: tuple[Hint, ...]
     checklist: tuple[str, ...]
     lesson_title: str = ""
+    lesson_intro: str = ""  # what the lesson teaches and why, shown as it starts
     learned: str = ""
     files: dict[str, dict[str, str]] = field(default_factory=dict, compare=False)
 
@@ -223,6 +224,7 @@ def load_exercises(root: Path) -> list[Exercise]:
                     hints=tuple(item.get("hints", ())),
                     checklist=tuple(item.get("checklist", ())),
                     lesson_title=data.get("title", lesson),
+                    lesson_intro=data.get("intro", "").strip(),
                     learned=item.get("learned", ""),
                     files=data.get("files", {}),
                 )
@@ -542,7 +544,15 @@ def next_action(exercise: Exercise, language: str) -> str:
         )
     if exercise.min_tests > 1:
         return f"Next: add your test to {tests}, then save. The tests re-run here."
-    return f"Next: in {edit}, replace the TODO with your code, then save. The tests re-run here."
+    return (
+        f"Next: read the tests in {tests}, then write the code in {edit} and save."
+        " The tests re-run here."
+    )
+
+
+def lesson_started(exercise: Exercise, progress: Progress) -> bool:
+    """Any step of this lesson done, in any language."""
+    return any(key.startswith(f"{exercise.lesson[:2]}.") for key in progress.done)
 
 
 HOW_THIS_WORKS = (
@@ -557,12 +567,15 @@ HOW_THIS_WORKS = (
 def describe(
     exercise: Exercise, language: str, progress: Progress, exercises: list[Exercise]
 ) -> str:
-    lines = [header(exercise, language, progress, exercises), "", exercise.task, ""]
+    lines = [header(exercise, language, progress, exercises), ""]
+    if exercise.lesson_intro and not lesson_started(exercise, progress):
+        lines.extend([exercise.lesson_intro, ""])
+    lines.extend([exercise.task, ""])
     files = exercise.files.get(language, {})
     if files:
         lines.append(f"Read   lessons/{exercise.lesson}/README.md")
-        lines.append(f"Edit   lessons/{exercise.lesson}/{files.get('edit', '')}")
         lines.append(f"Tests  lessons/{exercise.lesson}/{files.get('tests', '')}")
+        lines.append(f"Edit   lessons/{exercise.lesson}/{files.get('edit', '')}")
         lines.append("")
     lines.extend([bold(next_action(exercise, language)), ""])
     if not progress.done:
@@ -720,13 +733,14 @@ def open_in_editor(path: Path) -> None:
 
 
 def lesson_files(exercise: Exercise, language: str) -> list[Path]:
-    """The file the learner edits, if the lesson names one, then the lesson README.
+    """The file the learner edits, its tests, then the lesson README.
 
     VS Code shows the last file it opens, and the README is where to start.
     """
     lesson_dir = ROOT / "lessons" / exercise.lesson
-    edit = exercise.files.get(language, {}).get("edit")
-    return [*([lesson_dir / edit] if edit else []), lesson_dir / "README.md"]
+    files = exercise.files.get(language, {})
+    named = [lesson_dir / files[k] for k in ("edit", "tests") if files.get(k)]
+    return [*named, lesson_dir / "README.md"]
 
 
 def can_open_in_vscode() -> bool:

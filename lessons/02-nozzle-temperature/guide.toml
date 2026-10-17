@@ -3,6 +3,16 @@
 # A hint is either one text, or a table with a text per language and a default.
 
 title = "Nozzle temperature"
+intro = """
+This lesson adds writing tests yourself, before the code. nozzle_verdict comes
+with its tests, as in lesson 01. needs_enclosure comes with one: you write the
+rest first, watch them fail, then write the code. Why watch them fail? A test
+that passes before the code exists isn't testing anything.
+
+You'll also see why good tests sit on boundary values, like 189 and 190: bugs
+cluster at the edges. Choosing inputs like these is how you check code you
+didn't write, including code an AI wrote.
+"""
 
 [files]
 php = { edit = "php/temperature.php", tests = "php/test.php" }
@@ -13,9 +23,9 @@ rust = { edit = "rust/src/lib.rs", tests = "rust/tests/temperature.rs" }
 [[exercise]]
 title = "Too cold, ok, too hot"
 task = """
-Implement nozzle_verdict. The lesson README has each material's range. Both
-ends of a range count as ok, and a material that isn't in the table is an
-"unknown material".
+Make the nozzle_verdict tests pass. The lesson README has each material's
+range. Both ends of a range count as ok, and a material that isn't in the
+table is an "unknown material".
 """
 tests = "all"
 exclude = ["enclosure"]
