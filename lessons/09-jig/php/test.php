@@ -105,6 +105,7 @@ test('check needs exactly two arguments', function () {
 
 // log: no tests yet. Write them before the code.
 
+// The tiny test runner reports the result. Nothing to change below this line.
 if ($failures > 0) {
     echo "\n{$failures} failed\n";
     exit(1);

@@ -71,6 +71,7 @@ test('PLA in the middle of its range is OK', function () {
     assert_same(Verdict::Ok, nozzle_verdict(Material::PLA, 205));
 });
 
+// The tiny test runner reports the result. Nothing to change below this line.
 if ($failures > 0) {
     echo "\n{$failures} failed\n";
     exit(1);

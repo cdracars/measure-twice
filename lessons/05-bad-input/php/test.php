@@ -119,6 +119,7 @@ test('parse_material accepts PLA', function () {
     assert_same(Material::PLA, parse_material('PLA'));
 });
 
+// The tiny test runner reports the result. Nothing to change below this line.
 if ($failures > 0) {
     echo "\n{$failures} failed\n";
     exit(1);

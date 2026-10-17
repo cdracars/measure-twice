@@ -76,6 +76,7 @@ test('the heaviest job in the batch', function () {
     assert_same('vase', heaviest_job(friday_queue())?->name);
 });
 
+// The tiny test runner reports the result. Nothing to change below this line.
 if ($failures > 0) {
     echo "\n{$failures} failed\n";
     exit(1);
