@@ -896,13 +896,39 @@ def open_in_vscode(paths: list[Path]) -> bool:
     return done.returncode == 0
 
 
+def running_guide() -> int | None:
+    """The process ID of another guide that's already running, if there is one."""
+    if os.name != "posix":  # os.kill(pid, 0) only checks on POSIX; on Windows it kills
+        return None
+    try:
+        state = json.loads(STATE_FILE.read_text(encoding="utf-8"))
+        pid = int(state["pids"][0])
+    except (OSError, ValueError, KeyError, IndexError, TypeError):
+        return None
+    if state.get("status") in ("stopped", "all-done") or pid == os.getpid():
+        return None
+    try:
+        os.kill(pid, 0)
+    except ProcessLookupError:
+        return None
+    except PermissionError:
+        pass
+    return pid
+
+
 def watch(exercises: list[Exercise], progress: Progress, open_files: bool = True) -> int:
-    if not ensure_ready(progress):
+    if running_guide():
+        print("The guide is already running in another terminal. Switch to that one,")
+        print("or quit it there (q, then Enter) before starting it here.")
         return 1
     try:
+        if not progress.languages:
+            publish({"version": 1, "status": "setup", "pids": ancestor_pids()})
+        if not ensure_ready(progress):
+            return 1
         return watch_loop(exercises, progress, open_files)
     finally:
-        finished_all = current_step(exercises, progress) is None
+        finished_all = bool(progress.languages) and current_step(exercises, progress) is None
         publish({"version": 1, "status": "all-done" if finished_all else "stopped"})
 
 

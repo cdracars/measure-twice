@@ -31,6 +31,12 @@ tests and stub.
   hint, and marks it stopped when it exits. The panel only displays that file.
   No guide logic lives in the extension, so the terminal and the panel can't
   disagree.
+- **The panel starts the guide.** When the course opens and the folder is
+  trusted, the panel starts the guide in a "Measure Twice guide" terminal
+  (in Restricted Mode, terminals are blocked, so it explains that and waits
+  for trust). This replaces an earlier first-terminal hook in `~/.bashrc`, so
+  there is one way to start. The guide itself refuses to run while another
+  guide is running, so two can never fight over the progress file.
 - **Buttons type keys.** Hint, Done and Full output send the same keys to the
   guide's terminal that a learner would type. The panel finds that terminal
   by matching the process IDs the guide writes into its state.

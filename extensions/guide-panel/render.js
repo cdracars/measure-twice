@@ -89,6 +89,15 @@ function render(state, { trusted = true } = {}) {
   if (!trusted) {
     return untrusted();
   }
+  if (state && state.status === "setup") {
+    return (
+      `<h2>Welcome to Measure Twice</h2>` +
+      `<p>The guide is asking which languages you'll work in. Answer in its ` +
+      `terminal: list your strongest first, for example <code>php python ts rust</code>, ` +
+      `then press Enter.</p>` +
+      button("Go to the guide's terminal", "terminal")
+    );
+  }
   if (!state || state.version !== 1 || !state.step) {
     return notRunning(state);
   }

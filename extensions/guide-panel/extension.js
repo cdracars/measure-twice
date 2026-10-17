@@ -51,7 +51,8 @@ class GuidePanel {
 
   state() {
     const state = readState(this.statePath);
-    if (state && state.step && !guideIsAlive(state)) return { version: 1, status: "stopped" };
+    const live = state && !["stopped", "all-done"].includes(state.status);
+    if (live && !guideIsAlive(state)) return { version: 1, status: "stopped" };
     return state;
   }
 
@@ -163,9 +164,16 @@ class GuidePanel {
 }
 
 async function startGuide(root) {
-  const running = await findGuideTerminal(readState(path.join(root, ".guide-state.json")));
+  const state = readState(path.join(root, ".guide-state.json"));
+  const running = await findGuideTerminal(state);
   if (running) {
     running.show();
+    return;
+  }
+  // A guide we can't find a terminal for (another window, say) still counts:
+  // the guide itself refuses to run twice, so don't start a second one.
+  if (state && !["stopped", "all-done"].includes(state.status) && guideIsAlive(state)) {
+    vscode.window.showInformationMessage("The guide is already running in another terminal.");
     return;
   }
   const terminal = vscode.window.createTerminal({ name: TERMINAL_NAME, cwd: root });
@@ -199,6 +207,20 @@ function activate(context) {
   if (!context.workspaceState.get("measureTwice.shown")) {
     context.workspaceState.update("measureTwice.shown", true);
     vscode.commands.executeCommand("workbench.view.extension.measureTwice");
+  }
+
+  // Start the guide when the course opens, so a learner lands on step 1 without
+  // typing anything. In Restricted Mode terminals are blocked, so wait for trust.
+  // Only on opening: if the learner quits the guide later, the panel offers a
+  // Start button instead of restarting it behind their back.
+  const autoStart = () => {
+    const state = panel.state();
+    if (!state || state.status === "stopped") startGuide(root);
+  };
+  if (vscode.workspace.isTrusted) {
+    autoStart();
+  } else {
+    context.subscriptions.push(vscode.workspace.onDidGrantWorkspaceTrust(autoStart));
   }
 }
 

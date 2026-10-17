@@ -488,6 +488,28 @@ class OpenLessonFilesTest(unittest.TestCase):
         self.code.return_value = subprocess.CompletedProcess([], 1)
         self.assertNotIn(guide.FILES_OPEN, self.printed_by_watch())
 
+    @unittest.skipUnless(os.name == "posix", "the running-guide check is POSIX only")
+    def test_a_second_guide_refuses_to_start_while_one_is_running(self):
+        alive = os.getppid()  # a process that's certainly running, and isn't this one
+        self.state_file.write_text(json.dumps({"status": "ready", "pids": [alive]}))
+        with mock.patch.object(guide, "watch_loop") as loop:
+            self.assertEqual(1, guide.watch([], Progress(languages=["php"])))
+        loop.assert_not_called()
+        self.assertEqual("ready", json.loads(self.state_file.read_text())["status"])
+
+    def test_a_stopped_guide_does_not_block_a_new_one(self):
+        self.state_file.write_text(json.dumps({"status": "stopped", "pids": [os.getppid()]}))
+        self.assertIsNone(guide.running_guide())
+
+    def test_while_choosing_languages_the_panel_hears_the_guide_is_setting_up(self):
+        published = []
+        with (
+            mock.patch.object(guide, "publish", side_effect=published.append),
+            mock.patch.object(guide, "ensure_ready", return_value=False),
+        ):
+            guide.watch([], Progress())
+        self.assertEqual(["setup", "stopped"], [s["status"] for s in published])
+
     def test_quitting_tells_the_panel_the_guide_has_stopped(self):
         self.watch([])
         self.assertEqual("stopped", json.loads(self.state_file.read_text())["status"])

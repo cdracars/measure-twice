@@ -50,6 +50,12 @@ test("in Restricted Mode it asks for trust instead of showing the step", () => {
   assert.doesNotMatch(html, /Step 1 of 5/);
 });
 
+test("while the guide asks for languages, the panel points to its terminal", () => {
+  const html = render({ version: 1, status: "setup", pids: [1] });
+  assert.match(html, /asking which languages/);
+  assert.match(html, /data-action="terminal"/);
+});
+
 test("a stopped guide offers to start it", () => {
   const html = render({ version: 1, status: "stopped" });
   assert.match(html, /isn't running/);

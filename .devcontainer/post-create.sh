@@ -25,24 +25,6 @@ for dir in ~/.vscode-remote/extensions ~/.vscode-server/extensions; do
   cp -r extensions/guide-panel "$dir/$panel_id"
 done
 
-# In a codespace, the first terminal of each session starts the guide, so a
-# learner lands on step 1 without typing anything. Later terminals are plain
-# shells. boot_id changes whenever the codespace restarts.
-if ! grep -q 'measure-twice-guide' ~/.bashrc 2>/dev/null; then
-  cat >> ~/.bashrc <<'BASHRC'
-
-# measure-twice-guide: start the guide in the first terminal of a codespace.
-if [ -n "${CODESPACES:-}" ] && [[ $- == *i* ]] && [ -f lessons/01-filament-math/guide.toml ]; then
-  _guide_marker="/tmp/measure-twice-guide-$(cat /proc/sys/kernel/random/boot_id 2>/dev/null)"
-  if [ ! -e "$_guide_marker" ]; then
-    touch "$_guide_marker"
-    ./scripts/guide
-  fi
-  unset _guide_marker
-fi
-BASHRC
-fi
-
 # The first terminal in Codespaces and VS Code shows this notice.
 notice=/usr/local/etc/vscode-dev-containers/first-run-notice.txt
 if sudo -n true 2>/dev/null; then
@@ -50,9 +32,9 @@ if sudo -n true 2>/dev/null; then
   sudo tee "$notice" > /dev/null <<'TEXT'
 Welcome to Measure Twice. Everything is installed.
 
-The guide starts by itself in this terminal, and the Measure Twice
-panel in the sidebar shows each step with buttons for hints.
-Quit it? Start it again: ./scripts/guide
+The guide starts by itself in the "Measure Twice guide" terminal, and
+the Measure Twice panel in the sidebar shows each step.
+Quit it? Use the panel's Start button, or run: ./scripts/guide
 Or read the course:      README.md
 
 TEXT
