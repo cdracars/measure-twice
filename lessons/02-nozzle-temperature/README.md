@@ -2,6 +2,14 @@
 
 **Stage 1 · Basics + TDD rhythm** · Languages: PHP · Python · TypeScript · Rust
 
+## What you're learning
+
+Writing tests yourself, before the code, and choosing inputs that catch bugs.
+In lesson 01 the tests were given. Here `needs_enclosure` comes with one test,
+and you write the rest before its code. You also meet **boundary values**: the
+inputs at the very edge of a range, where bugs cluster. Both are how you check
+code you didn't write, including code an AI wrote.
+
 ## The problem
 
 Before Jig starts a print job, it should catch obvious mistakes, such as
