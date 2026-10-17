@@ -42,7 +42,10 @@ Ignore bad input such as negative lengths for now. Handling it is Lesson 05.
 Start with the language you know best, then do the ones you're learning, with
 your weakest last. The first time through, you're working out the problem;
 after that, you're learning how each language expresses the same answer.
-For each language:
+
+Running `./scripts/guide`? It runs the tests for you and takes you through
+these steps one at a time: edit the stub, save, and watch the terminal.
+Without the guide, for each language:
 
 1. **Red:** run the tests and watch them fail. Read the failure message.
    ```sh

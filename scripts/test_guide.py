@@ -421,10 +421,10 @@ class OpenLessonFilesTest(unittest.TestCase):
     def code_calls(self) -> list[list[str]]:
         return [c.args[0] for c in self.code.call_args_list if c.args[0][0] == "code"]
 
-    def test_a_step_opens_the_lesson_readme_and_the_file_to_edit(self):
+    def test_a_step_opens_the_file_to_edit_then_the_lesson_readme_so_the_readme_shows(self):
         self.watch([])
         readme, stub = self.lesson_dir / "README.md", self.lesson_dir / "php/filament.php"
-        self.assertEqual([["code", "--reuse-window", str(readme), str(stub)]], self.code_calls())
+        self.assertEqual([["code", "--reuse-window", str(stub), str(readme)]], self.code_calls())
 
     def test_saving_re_runs_the_tests_without_opening_the_files_again(self):
         self.assertEqual(3, self.watch([None, None], saves=3))
@@ -466,6 +466,43 @@ class OpenLessonFilesTest(unittest.TestCase):
         self.assertEqual(
             [self.lesson_dir / "README.md"], guide.lesson_files(exercise(files={}), "php")
         )
+
+
+class NextActionTest(unittest.TestCase):
+    """Each step says what to do now; the very first one also says how the guide works."""
+
+    def describe(self, step: Exercise, done=()) -> str:
+        progress = Progress(languages=["php"], done=set(done))
+        return guide.describe(step, "php", progress, [step])
+
+    def test_a_check_step_says_which_file_to_change_and_that_saving_re_runs(self):
+        self.assertEqual(
+            "Next: in php/filament.php, replace the TODO with your code, then save."
+            " The tests re-run here.",
+            guide.next_action(exercise(files=PHP_FILES), "php"),
+        )
+
+    def test_a_tests_first_step_says_to_write_the_tests_before_the_code(self):
+        action = guide.next_action(exercise(kind="tests-first", files=PHP_FILES), "php")
+        self.assertIn("write the tests in php/test.php first", action)
+
+    def test_a_step_that_needs_more_tests_says_to_add_one(self):
+        action = guide.next_action(exercise(min_tests=7, files=PHP_FILES), "php")
+        self.assertIn("add your test to php/test.php", action)
+
+    def test_a_checklist_step_says_to_press_d(self):
+        action = guide.next_action(exercise(kind="confirm", files=PHP_FILES), "php")
+        self.assertIn("Press d when it's done", action)
+
+    def test_every_step_shows_its_next_line(self):
+        self.assertIn("Next: in php/filament.php", self.describe(exercise(files=PHP_FILES)))
+
+    def test_the_first_step_explains_how_the_guide_works(self):
+        self.assertIn("How this works", self.describe(exercise(files=PHP_FILES)))
+
+    def test_once_a_step_is_done_the_explanation_goes_away(self):
+        text = self.describe(exercise(files=PHP_FILES), done=["01.1:php"])
+        self.assertNotIn("How this works", text)
 
 
 if __name__ == "__main__":

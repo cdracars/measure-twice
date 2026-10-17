@@ -62,7 +62,11 @@ When you write your own tests from now on, ask where the boundaries are.
 ## How to work through it
 
 Start with the language you know best, then do the ones you're learning, with
-your weakest last. For each language:
+your weakest last.
+
+Running `./scripts/guide`? It runs the tests for you and takes you through
+these steps one at a time: edit the stub, save, and watch the terminal.
+Without the guide, for each language:
 
 1. **Red:** `./scripts/check 02 rust` (or `php`, `python`, `ts`)
 2. **Green:** make the `nozzle_verdict` tests pass.

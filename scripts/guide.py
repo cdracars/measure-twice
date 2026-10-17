@@ -529,6 +529,31 @@ def header(exercise: Exercise, language: str, progress: Progress, exercises: lis
     )
 
 
+def next_action(exercise: Exercise, language: str) -> str:
+    """What to do right now, in one line: which file to change, and that saving re-runs."""
+    files = exercise.files.get(language, {})
+    edit, tests = files.get("edit", "the stub"), files.get("tests", "the tests file")
+    if exercise.kind == "confirm":
+        return "Next: work through the checklist, saving as you go. Press d when it's done."
+    if exercise.kind == "tests-first":
+        return (
+            f"Next: write the tests in {tests} first and save. Watch them fail,"
+            f" then make them pass in {edit}."
+        )
+    if exercise.min_tests > 1:
+        return f"Next: add your test to {tests}, then save. The tests re-run here."
+    return f"Next: in {edit}, replace the TODO with your code, then save. The tests re-run here."
+
+
+HOW_THIS_WORKS = (
+    "How this works: the ✗ lines below are tests failing on purpose, because the code"
+    " isn't written yet. That's red.\n"
+    "Read the problem in the lesson README, write the code, and save. When every test"
+    " passes (green), you move on.\n"
+    "Stuck? Type h and press Enter for a hint."
+)
+
+
 def describe(
     exercise: Exercise, language: str, progress: Progress, exercises: list[Exercise]
 ) -> str:
@@ -539,6 +564,9 @@ def describe(
         lines.append(f"Edit   lessons/{exercise.lesson}/{files.get('edit', '')}")
         lines.append(f"Tests  lessons/{exercise.lesson}/{files.get('tests', '')}")
         lines.append("")
+    lines.extend([bold(next_action(exercise, language)), ""])
+    if not progress.done:
+        lines.extend([dim(HOW_THIS_WORKS), ""])
     if exercise.checklist:
         lines.append("Checklist:")
         lines.extend(f"  [ ] {item}" for item in exercise.checklist)
@@ -692,10 +720,13 @@ def open_in_editor(path: Path) -> None:
 
 
 def lesson_files(exercise: Exercise, language: str) -> list[Path]:
-    """The lesson README, then the file the learner edits, if the lesson names one."""
+    """The file the learner edits, if the lesson names one, then the lesson README.
+
+    VS Code shows the last file it opens, and the README is where to start.
+    """
     lesson_dir = ROOT / "lessons" / exercise.lesson
     edit = exercise.files.get(language, {}).get("edit")
-    return [lesson_dir / "README.md", *([lesson_dir / edit] if edit else [])]
+    return [*([lesson_dir / edit] if edit else []), lesson_dir / "README.md"]
 
 
 def can_open_in_vscode() -> bool:
