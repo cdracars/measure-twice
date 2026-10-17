@@ -26,7 +26,6 @@
     },
     "vscode": {
       "settings": {
-        "task.allowAutomaticTasks": "on",
         "workbench.editorAssociations": {
           "**/lessons/*/README.md": "vscode.markdown.preview.editor"
         }
