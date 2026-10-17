@@ -5,10 +5,17 @@
 ## What you're learning
 
 Writing tests yourself, before the code, and choosing inputs that catch bugs.
-In lesson 01 the tests were given. Here `needs_enclosure` comes with one test,
-and you write the rest before its code. You also meet **boundary values**: the
-inputs at the very edge of a range, where bugs cluster. Both are how you check
-code you didn't write, including code an AI wrote.
+
+**The setup:** you swap roles. In lesson 01 a teammate wrote the tests and you
+made them pass. `nozzle_verdict` still comes with their tests, but
+`needs_enclosure` comes with just one, and you write the rest before its code.
+This back-and-forth, where one person writes a failing test and the other makes
+it pass, is called **ping-pong pairing**. You don't need a partner: here you
+play both sides.
+
+You also meet **boundary values**: the inputs at the very edge of a range,
+where bugs cluster. Both are how you check code you didn't write, including
+code an AI wrote.
 
 ## The problem
 
