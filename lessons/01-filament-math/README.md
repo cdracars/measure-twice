@@ -82,15 +82,57 @@ then change its name, inputs and expected value.
 ## Worked example
 
 The first test says one metre (1000 mm) of 1.75 mm PLA, density 1.24 g/cm³,
-weighs 2.98 g. Here's where that number comes from, one line of the formula at
-a time:
+weighs 2.98 g. Here's where that number comes from. Grab a calculator and
+follow along.
+
+**1. Find the radius.** The diameter, 1.75 mm, is how wide the filament is,
+straight across. The radius is half of that: from the middle to the edge.
 
 ```text
-radius       = 1.75 / 2        = 0.875 mm
+radius = 1.75 ÷ 2 = 0.875 mm
+```
+
+**2. Find the area of the end.** Cut the filament and look at the cut end: it's
+a circle. A circle's area is π × radius × radius, where π ≈ 3.14159. The answer
+is in mm² (square millimetres) because you multiplied millimetres by
+millimetres.
+
+```text
+area = 3.14159 × 0.875 × 0.875 ≈ 2.405 mm²
+```
+
+**3. Find the volume.** A length of filament is that circle stretched out, like
+a stack of very thin slices. Area × length is how much space the whole piece
+fills, in mm³ (cubic millimetres).
+
+```text
+volume = 2.405 × 1000 ≈ 2405 mm³
+```
+
+**4. Change mm³ to cm³.** Density is given per cm³, so the volume has to be in
+cm³ too. 1 cm is 10 mm, so a 1 cm cube is 10 × 10 × 10 = 1000 mm³. Divide by
+1000.
+
+```text
+volume = 2405 ÷ 1000 ≈ 2.405 cm³
+```
+
+**5. Find the weight.** Density says how much each cm³ weighs: PLA weighs
+1.24 g per cm³. Multiply the volume by it.
+
+```text
+weight = 2.405 × 1.24 ≈ 2.98 g   ← the test's expected value
+```
+
+All five steps together, which is the formula from "The problem" with real
+numbers in it:
+
+```text
+radius       = 1.75 ÷ 2        = 0.875 mm
 area         = π × 0.875²      ≈ 2.405 mm²
 volume (mm³) = 2.405 × 1000    ≈ 2405 mm³
-volume (cm³) = 2405 / 1000     ≈ 2.405 cm³
-weight       = 2.405 × 1.24    ≈ 2.98 g     ← the test's expected value
+volume (cm³) = 2405 ÷ 1000     ≈ 2.405 cm³
+weight       = 2.405 × 1.24    ≈ 2.98 g
 ```
 
 So 1 m of 1.75 mm PLA weighs about 3 g, and a 1 kg spool holds roughly
