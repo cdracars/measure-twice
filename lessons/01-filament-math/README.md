@@ -6,13 +6,14 @@
 
 **Test-driven development (TDD):** the tests come first. They describe what
 the code must do, and you write code until they pass. A passing test is proof
-you can re-check any time, whoever wrote the code: you, a colleague, or an AI.
+you can re-check any time, whoever wrote the code: you, a teammate, or an AI.
 It also tells you the moment a later change breaks something.
 
-In this lesson the tests are written for you. Read them first: they're the
-spec, and [Reading the tests](#reading-the-tests) shows how. You write the code in the stub. The filament math is something concrete
-to practise on; the habit is the point. From lesson 02 you write tests
-yourself.
+**The setup:** a teammate turned the filament maker's data sheet into tests,
+and your job is to make them pass. Before any code, read what they wrote:
+the tests are the spec, and [Reading the tests](#reading-the-tests) shows
+how. The filament math is something concrete to practise on; the habit is the
+point. In lesson 02 you swap roles and write the tests yourself.
 
 ## The problem
 
@@ -105,6 +106,9 @@ Running `./scripts/guide`? It runs the tests for you and takes you through
 these steps one at a time: edit the stub, save, and watch the terminal.
 Without the guide, for each language:
 
+0. **Read the tests:** find the first test in the tests file and work out its
+   expected answer by hand with the formula above. Now you know what the code
+   must do before you write any.
 1. **Red:** run the tests and watch them fail. Read the failure message.
    ```sh
    ./scripts/check 01 rust     # or php, python, ts

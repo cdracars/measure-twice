@@ -4,9 +4,11 @@
 
 title = "Nozzle temperature"
 intro = """
-This lesson adds writing tests yourself, before the code. nozzle_verdict comes
-with its tests, as in lesson 01. needs_enclosure comes with one: you write the
-rest first, watch them fail, then write the code. Why watch them fail? A test
+This lesson swaps roles: now you write tests, before the code. nozzle_verdict
+comes with its tests from your teammate, as in lesson 01. needs_enclosure comes
+with one: you write the rest first, watch them fail, then write the code. This
+back-and-forth (one person writes a failing test, the other makes it pass) is
+called ping-pong pairing; here you play both sides. Why watch them fail? A test
 that passes before the code exists isn't testing anything.
 
 You'll also see why good tests sit on boundary values, like 189 and 190: bugs
