@@ -18,7 +18,9 @@ Usage: ./scripts/guide [command]
                  --structure to only check that each exercise finds its tests
 
 Exercises live in lessons/*/guide.toml. Your progress is kept in
-.guide-progress.json, which git ignores. Works with any editor.
+.guide-progress.json, which git ignores. Works with any editor. In VS Code,
+the Explorer only shows the lesson folders of the languages you chose
+(.vscode/settings.json, which git also ignores).
 """
 
 from __future__ import annotations
@@ -39,6 +41,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 PROGRESS_FILE = ROOT / ".guide-progress.json"
+VSCODE_SETTINGS = ROOT / ".vscode" / "settings.json"
 
 LANGUAGES = ("php", "python", "ts", "rust")
 LANGUAGE_NAMES = {"php": "PHP", "python": "Python", "ts": "TypeScript", "rust": "Rust"}
@@ -650,12 +653,54 @@ def ensure_ready(progress: Progress) -> bool:
             return False
         progress.languages = languages
         progress.save(PROGRESS_FILE)
+    message = show_only_languages(VSCODE_SETTINGS, progress.languages)
+    if message:
+        print(dim(message))
     problems = doctor(progress.languages)
     for problem in problems:
         print(red(problem))
     if problems:
         print("Fix these, then run ./scripts/guide again.")
     return not problems
+
+
+def show_only_languages(path: Path, languages: list[str]) -> str | None:
+    """Hide the lesson folders of languages not chosen from VS Code's Explorer.
+
+    Uses files.exclude in the workspace settings. An entry the learner set to
+    false is their choice and stays. Returns a message when something changed.
+    """
+    try:
+        settings = json.loads(path.read_text(encoding="utf-8"))
+    except FileNotFoundError:
+        settings = {}
+    except (OSError, ValueError):
+        return f"Couldn't read {relative(str(path))}, so every language's folders stay visible."
+    excludes = settings.get("files.exclude", {}) if isinstance(settings, dict) else None
+    if not isinstance(excludes, dict):
+        return f"{relative(str(path))} isn't as expected, so every language's folders stay visible."
+    before = dict(excludes)
+    for language in LANGUAGES:
+        pattern = f"lessons/*/{language}"
+        if excludes.get(pattern) is False:
+            continue
+        if language in languages:
+            excludes.pop(pattern, None)
+        else:
+            excludes[pattern] = True
+    if excludes == before:
+        return None
+    if excludes:
+        settings["files.exclude"] = excludes
+    else:
+        settings.pop("files.exclude", None)
+    path.parent.mkdir(exist_ok=True)
+    path.write_text(json.dumps(settings, indent=2) + "\n", encoding="utf-8")
+    if not any(excludes.values()):
+        return "VS Code's Explorer now shows every language's lesson folders."
+    names = [LANGUAGE_NAMES[lang] for lang in languages]
+    listed = names[0] if len(names) == 1 else ", ".join(names[:-1]) + " and " + names[-1]
+    return f"VS Code's Explorer now shows only the {listed} lesson folders."
 
 
 def watched_files(lesson: str, language: str) -> dict[Path, float]:
@@ -893,6 +938,9 @@ def main(argv: list[str]) -> int:
         progress.languages = languages
         progress.save(PROGRESS_FILE)
         print(f"Languages: {', '.join(LANGUAGE_NAMES[lang] for lang in languages)}")
+        message = show_only_languages(VSCODE_SETTINGS, languages)
+        if message:
+            print(message)
         print("Now run ./scripts/guide")
         return 0
     if command == "watch":

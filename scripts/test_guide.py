@@ -1,5 +1,6 @@
 """Tests for the guide. Run: python3 -m unittest discover -s scripts"""
 
+import json
 import os
 import subprocess
 import tempfile
@@ -407,6 +408,67 @@ class LessonFilesTest(unittest.TestCase):
                 for hint in e.hints:
                     for language in guide.LANGUAGES:
                         self.assertTrue(guide.hint_text(hint, language))
+
+
+class ShowOnlyLanguagesTest(unittest.TestCase):
+    """Hiding the lesson folders of languages not chosen, in .vscode/settings.json."""
+
+    def setUp(self):
+        temp = tempfile.TemporaryDirectory()
+        self.addCleanup(temp.cleanup)
+        self.path = Path(temp.name) / ".vscode" / "settings.json"
+
+    def excludes(self) -> dict:
+        return json.loads(self.path.read_text(encoding="utf-8")).get("files.exclude", {})
+
+    def test_the_languages_not_chosen_are_hidden(self):
+        message = guide.show_only_languages(self.path, ["php", "python"])
+        self.assertEqual({"lessons/*/ts": True, "lessons/*/rust": True}, self.excludes())
+        self.assertIn("PHP and Python", message or "")
+
+    def test_choosing_a_language_again_shows_it(self):
+        guide.show_only_languages(self.path, ["php"])
+        guide.show_only_languages(self.path, ["php", "rust"])
+        self.assertEqual({"lessons/*/python": True, "lessons/*/ts": True}, self.excludes())
+
+    def test_other_settings_and_the_learners_own_choices_stay(self):
+        self.path.parent.mkdir()
+        self.path.write_text(
+            json.dumps({"editor.tabSize": 2, "files.exclude": {"lessons/*/ts": False, "x": True}}),
+            encoding="utf-8",
+        )
+        guide.show_only_languages(self.path, ["php"])
+        settings = json.loads(self.path.read_text(encoding="utf-8"))
+        self.assertEqual(2, settings["editor.tabSize"])
+        self.assertEqual(
+            {"lessons/*/ts": False, "x": True, "lessons/*/python": True, "lessons/*/rust": True},
+            settings["files.exclude"],
+        )
+
+    def test_three_languages_read_as_a_list(self):
+        message = guide.show_only_languages(self.path, ["php", "python", "rust"])
+        self.assertIn("PHP, Python and Rust", message or "")
+
+    def test_choosing_all_four_later_shows_everything(self):
+        guide.show_only_languages(self.path, ["php"])
+        message = guide.show_only_languages(self.path, list(guide.LANGUAGES))
+        self.assertEqual({}, self.excludes())
+        self.assertIn("every language", message or "")
+
+    def test_all_four_languages_need_no_settings_file(self):
+        self.assertIsNone(guide.show_only_languages(self.path, list(guide.LANGUAGES)))
+        self.assertFalse(self.path.exists())
+
+    def test_nothing_changed_says_nothing(self):
+        guide.show_only_languages(self.path, ["php"])
+        self.assertIsNone(guide.show_only_languages(self.path, ["php"]))
+
+    def test_a_settings_file_with_comments_is_left_alone(self):
+        self.path.parent.mkdir()
+        self.path.write_text('{\n  // mine\n  "editor.tabSize": 2\n}\n', encoding="utf-8")
+        message = guide.show_only_languages(self.path, ["php"])
+        self.assertIn("stay visible", message or "")
+        self.assertIn("// mine", self.path.read_text(encoding="utf-8"))
 
 
 PHP_FILES = {"php": {"edit": "php/filament.php", "tests": "php/test.php"}}

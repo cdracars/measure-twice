@@ -96,7 +96,9 @@ through the lessons one step at a time:
 ```
 
 The first time, it asks which languages you'll use (strongest first) and
-checks they're installed. Then it shows your current step, and every time you
+checks they're installed. In VS Code, the Explorer then shows only those
+languages' lesson folders; `./scripts/guide start` with a different list
+changes that. Then it shows your current step, and every time you
 save a file it re-runs that step's tests and shows what failed: expected,
 got, and where. When the step passes, it moves you on.
 

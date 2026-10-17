@@ -119,15 +119,22 @@ Not decided; written down so they aren't lost.
   "built-in to framework" story for lesson 10, and a fifth comparison column.
   First step if pursued: port lesson 01, and 05 or 07, on a branch to measure
   the real cost per lesson.
-- **Only the learner's languages.** Show and install only the languages a
-  learner is working in. Two separate parts:
-  - In the editor: the guide could hide the other languages' folders (VS
-    Code's `files.exclude`) once languages are chosen. Cheap.
-  - In the dev container: install only the chosen toolchains, for faster
-    starts. Harder: a codespace's features are fixed when it's created, so
-    this means one dev container configuration per language (Codespaces can
-    pick one at creation, possibly from the README badge's link; to check),
-    or installing toolchains on demand. The current base image is PHP's.
+- **Only the learner's languages in the dev container.** Install only the
+  toolchains a learner chose, for faster starts. (The editor side is done:
+  the guide hides other languages' lesson folders in VS Code.) A codespace's
+  features are fixed when it's created, so the options are:
+  - One configuration per language, at `.devcontainer/<name>/devcontainer.json`
+    (Codespaces allows exactly one level below `.devcontainer`). Learners
+    pick one in the creation page's dropdown, or from a per-language badge:
+    GitHub's "Share a deep link" builds a `codespaces.new` link with the
+    configuration chosen. Configurations can't inherit from each other, so
+    shared settings are duplicated. Learners who want two languages need a
+    combined configuration, or the full one.
+  - One lean configuration, with the guide installing toolchains on demand
+    after `start`. Slower first step per language and needs root in the
+    container, but no combinations to maintain.
+  - Either way, the base image is PHP's today; a lean configuration would
+    need a neutral base such as Debian with features for each language.
 
 ## Reading
 
