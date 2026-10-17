@@ -106,6 +106,29 @@ You learn these by working inside them, not by reading about them:
   ([ADR 0005](docs/adr/0005-a-dev-container.md))
 - Later: conventional commits, pre-commit hooks
 
+## Ideas under consideration
+
+Not decided; written down so they aren't lost.
+
+- **Go as a fifth language.** `go test` is built in, so it fits stage 1
+  (ADR 0001), and `go test -json` is easy for the guide to read. Name tests
+  as subtests (`t.Run("zero length weighs nothing", ...)`) so the guide's
+  phrases match. Go adds new contrasts: no real enums (04), errors as values
+  that nothing forces you to check (05), strings as bytes (07), interfaces
+  satisfied implicitly (A6). Cost: Go content for every lesson, a weaker
+  "built-in to framework" story for lesson 10, and a fifth comparison column.
+  First step if pursued: port lesson 01, and 05 or 07, on a branch to measure
+  the real cost per lesson.
+- **Only the learner's languages.** Show and install only the languages a
+  learner is working in. Two separate parts:
+  - In the editor: the guide could hide the other languages' folders (VS
+    Code's `files.exclude`) once languages are chosen. Cheap.
+  - In the dev container: install only the chosen toolchains, for faster
+    starts. Harder: a codespace's features are fixed when it's created, so
+    this means one dev container configuration per language (Codespaces can
+    pick one at creation, possibly from the README badge's link; to check),
+    or installing toolchains on demand. The current base image is PHP's.
+
 ## Reading
 
 - *The Rust Programming Language* (the official book): <https://doc.rust-lang.org/book/>
