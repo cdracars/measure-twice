@@ -9,9 +9,10 @@ const fs = require("node:fs");
 const path = require("node:path");
 const crypto = require("node:crypto");
 const vscode = require("vscode");
-const { render } = require("./render");
+const { render, LANGUAGES } = require("./render");
 
 const TERMINAL_NAME = "Measure Twice guide";
+const LANGUAGE_IDS = LANGUAGES.map(([id]) => id);
 
 function readState(statePath) {
   try {
@@ -19,6 +20,20 @@ function readState(statePath) {
   } catch {
     return null;
   }
+}
+
+// The guide keeps the learner's languages in .guide-progress.json.
+function languagesChosen(root) {
+  const progress = readState(path.join(root, ".guide-progress.json"));
+  return Boolean(progress && Array.isArray(progress.languages) && progress.languages.length);
+}
+
+// Only the four course languages, each once, in the order the learner clicked.
+function validLanguages(text) {
+  const picked = String(text).split(/\s+/).filter(Boolean);
+  const unique = [...new Set(picked)];
+  if (!unique.length || unique.length !== picked.length) return null;
+  return unique.every((id) => LANGUAGE_IDS.includes(id)) ? unique : null;
 }
 
 // The guide lists its own process first. If that process is gone (the terminal
@@ -67,7 +82,10 @@ class GuidePanel {
 
   refresh() {
     if (this.view) {
-      const html = render(this.state(), { trusted: vscode.workspace.isTrusted });
+      const html = render(this.state(), {
+        trusted: vscode.workspace.isTrusted,
+        needsLanguages: !languagesChosen(this.root),
+      });
       this.view.webview.postMessage({ type: "render", html });
     }
   }
@@ -75,6 +93,9 @@ class GuidePanel {
   async handle({ action, value }) {
     if (action === "trust") {
       await vscode.commands.executeCommand("workbench.trust.manage");
+    } else if (action === "choose") {
+      const languages = validLanguages(value);
+      if (languages) await startGuide(this.root, languages);
     } else if (action === "open") {
       await vscode.commands.executeCommand("vscode.open", vscode.Uri.file(path.join(this.root, value)));
     } else if (action === "start") {
@@ -129,6 +150,10 @@ class GuidePanel {
   .message { font-family: var(--vscode-editor-font-family); font-size: 0.92em; color: var(--vscode-descriptionForeground); margin-left: 1.2em; }
   .hint { padding: 6px 10px; border-radius: 4px; background: var(--vscode-textBlockQuote-background); }
   .how { margin-top: 1.4em; font-size: 0.92em; }
+  .picker button, button.secondary { color: var(--vscode-button-secondaryForeground); background: var(--vscode-button-secondaryBackground); }
+  .picker button.on { color: var(--vscode-button-foreground); background: var(--vscode-button-background); }
+  button:disabled { opacity: 0.5; cursor: default; }
+  ol#picked { padding-left: 1.4em; margin: 0.4em 0; }
 </style>
 </head>
 <body>
@@ -153,9 +178,41 @@ class GuidePanel {
     checks[stepKey] = { ...(checks[stepKey] || {}), [box.dataset.check]: box.checked };
     vscode.setState(checks);
   });
+  // The language picker: clicking adds a language to the end of the list (or
+  // takes it out), so the order is strongest first.
+  let picked = [];
+  function showPicked() {
+    const list = document.getElementById("picked");
+    const start = document.getElementById("choose");
+    if (!list || !start) return;
+    list.innerHTML = "";
+    picked.forEach((id) => {
+      const item = document.createElement("li");
+      item.textContent = document.querySelector('[data-pick="' + id + '"]').textContent;
+      list.appendChild(item);
+    });
+    document.getElementById("picked-empty").hidden = picked.length > 0;
+    document.querySelectorAll("[data-pick]").forEach((b) => b.classList.toggle("on", picked.includes(b.dataset.pick)));
+    start.disabled = picked.length === 0;
+    start.dataset.value = picked.join(" ");
+  }
   app.addEventListener("click", (event) => {
+    const pick = event.target.closest("[data-pick]");
+    if (pick) {
+      const id = pick.dataset.pick;
+      picked = picked.includes(id) ? picked.filter((p) => p !== id) : [...picked, id];
+      showPicked();
+      return;
+    }
+    if (event.target.closest("[data-pick-reset]")) {
+      picked = [];
+      showPicked();
+      return;
+    }
     const button = event.target.closest("button[data-action]");
-    if (button) vscode.postMessage({ action: button.dataset.action, value: button.dataset.value || "" });
+    if (button && !button.disabled) {
+      vscode.postMessage({ action: button.dataset.action, value: button.dataset.value || "" });
+    }
   });
 </script>
 </body>
@@ -163,11 +220,19 @@ class GuidePanel {
   }
 }
 
-async function startGuide(root) {
+// Starts the guide in a terminal that stays in the background: the panel is
+// what the learner looks at. GUIDE_PANEL=1 tells the guide to keep its own
+// screen brief. With `languages`, it first saves them (./scripts/guide start).
+async function startGuide(root, languages) {
+  if (!languages && !languagesChosen(root)) {
+    // Nothing to start yet: the panel shows the language picker.
+    vscode.commands.executeCommand("workbench.view.extension.measureTwice");
+    return;
+  }
   const state = readState(path.join(root, ".guide-state.json"));
   const running = await findGuideTerminal(state);
   if (running) {
-    running.show();
+    if (!languages) running.show();
     return;
   }
   // A guide we can't find a terminal for (another window, say) still counts:
@@ -176,9 +241,15 @@ async function startGuide(root) {
     vscode.window.showInformationMessage("The guide is already running in another terminal.");
     return;
   }
-  const terminal = vscode.window.createTerminal({ name: TERMINAL_NAME, cwd: root });
-  terminal.show();
-  terminal.sendText("./scripts/guide", true);
+  const terminal = vscode.window.createTerminal({
+    name: TERMINAL_NAME,
+    cwd: root,
+    env: { GUIDE_PANEL: "1" },
+  });
+  const command = languages
+    ? `./scripts/guide start ${languages.join(" ")} && ./scripts/guide`
+    : "./scripts/guide";
+  terminal.sendText(command, true);
 }
 
 function activate(context) {
@@ -199,8 +270,11 @@ function activate(context) {
   );
 
   // Polling is simple and works the same in Codespaces, dev containers and locally.
-  fs.watchFile(panel.statePath, { interval: 500 }, () => panel.refresh());
-  context.subscriptions.push({ dispose: () => fs.unwatchFile(panel.statePath) });
+  const progressPath = path.join(root, ".guide-progress.json");
+  for (const file of [panel.statePath, progressPath]) {
+    fs.watchFile(file, { interval: 500 }, () => panel.refresh());
+    context.subscriptions.push({ dispose: () => fs.unwatchFile(file) });
+  }
 
   // Show the panel the first time the course opens; after that, leave the
   // sidebar where the learner put it.

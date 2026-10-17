@@ -56,6 +56,27 @@ test("while the guide asks for languages, the panel points to its terminal", () 
   assert.match(html, /data-action="terminal"/);
 });
 
+test("before any languages are chosen, it shows the language picker", () => {
+  const html = render(null, { needsLanguages: true });
+  assert.match(html, /strongest first/);
+  for (const id of ["php", "python", "ts", "rust"]) {
+    assert.ok(html.includes(`data-pick="${id}"`), id);
+  }
+  assert.match(html, /data-action="choose" id="choose" disabled/);
+});
+
+test("a running guide wins over the picker", () => {
+  const html = render(state(), { needsLanguages: true });
+  assert.match(html, /Step 1 of 5/);
+});
+
+test("toolchain problems are listed with a way to try again", () => {
+  const html = render({ version: 1, status: "problems", problems: ["Rust: cargo not found"] });
+  assert.match(html, /Something needs fixing first/);
+  assert.match(html, /Rust: cargo not found/);
+  assert.match(html, /data-action="start"/);
+});
+
 test("a stopped guide offers to start it", () => {
   const html = render({ version: 1, status: "stopped" });
   assert.match(html, /isn't running/);

@@ -7,7 +7,8 @@ Usage: ./scripts/guide [command]
                  lesson README · o full output · d done (checklists) · q quit.
                  In VS Code's terminal (and Codespaces) each step opens the
                  lesson README and the file you edit; --no-open, or setting
-                 GUIDE_NO_OPEN=1, turns that off.
+                 GUIDE_NO_OPEN=1, turns that off. The VS Code guide panel
+                 starts it with GUIDE_PANEL=1, which keeps this screen brief.
   start [langs]  choose your languages, strongest first: start php python ts rust
   status         what you've done and what's next
   hint           show the next hint for the current exercise
@@ -921,15 +922,46 @@ def watch(exercises: list[Exercise], progress: Progress, open_files: bool = True
         print("The guide is already running in another terminal. Switch to that one,")
         print("or quit it there (q, then Enter) before starting it here.")
         return 1
+    end: dict | None = None
     try:
         if not progress.languages:
             publish({"version": 1, "status": "setup", "pids": ancestor_pids()})
         if not ensure_ready(progress):
+            if progress.languages:  # a toolchain is missing: the panel shows what to fix
+                end = {"version": 1, "status": "problems", "problems": doctor(progress.languages)}
             return 1
         return watch_loop(exercises, progress, open_files)
     finally:
         finished_all = bool(progress.languages) and current_step(exercises, progress) is None
-        publish({"version": 1, "status": "all-done" if finished_all else "stopped"})
+        publish(end or {"version": 1, "status": "all-done" if finished_all else "stopped"})
+
+
+def panel_mode() -> bool:
+    """Started by the VS Code panel, which shows the step, so the terminal can be brief."""
+    return os.environ.get("GUIDE_PANEL") == "1"
+
+
+PANEL_NOTE = "The Measure Twice panel shows this step. Keep this terminal open: it runs your tests."
+
+
+def brief_screen(
+    exercise: Exercise,
+    language: str,
+    progress: Progress,
+    exercises: list[Exercise],
+    run: Run | None,
+) -> str:
+    """The terminal's screen when the panel is showing the step."""
+    lines = [header(exercise, language, progress, exercises), "", dim(PANEL_NOTE), ""]
+    if run is None or run.evaluation is None:
+        lines.append(dim("Running the tests..."))
+    else:
+        passing = sum(1 for r in run.evaluation.selected if r.passed)
+        failing = len(run.evaluation.selected) - passing
+        counts = [green(f"✓ {passing} passing")] if passing else []
+        counts += [red(f"✗ {failing} failing")] if failing else []
+        lines.append("  ".join(counts) or red("No tests for this step ran: press o to see why."))
+    return "\n".join(lines)
 
 
 def watch_loop(exercises: list[Exercise], progress: Progress, open_files: bool) -> int:
@@ -957,14 +989,21 @@ def watch_loop(exercises: list[Exercise], progress: Progress, open_files: bool) 
                     and open_in_vscode(lesson_files(exercise, language))
                 )
                 opened = shown
+            brief = panel_mode()
             clear_screen()
-            print(describe(exercise, language, progress, exercises, files_open))
-            print(dim("Running the tests..."))
+            if brief:
+                print(brief_screen(exercise, language, progress, exercises, None))
+            else:
+                print(describe(exercise, language, progress, exercises, files_open))
+                print(dim("Running the tests..."))
             publish(panel_state(exercise, language, progress, exercises, None, files_open))
             last = check_step(exercise, language, progress)
             clear_screen()
-            print(describe(exercise, language, progress, exercises, files_open))
-            print(last.text)
+            if brief:
+                print(brief_screen(exercise, language, progress, exercises, last))
+            else:
+                print(describe(exercise, language, progress, exercises, files_open))
+                print(last.text)
             publish(panel_state(exercise, language, progress, exercises, last, files_open))
             if last.complete:
                 print("\n" + finished(exercise, current_step(exercises, progress)))

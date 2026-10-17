@@ -85,9 +85,53 @@ function untrusted() {
   );
 }
 
-function render(state, { trusted = true } = {}) {
+const LANGUAGES = [
+  ["php", "PHP"],
+  ["python", "Python"],
+  ["ts", "TypeScript"],
+  ["rust", "Rust"],
+];
+
+// The first run asks which languages, strongest first. The order matters, so
+// the learner clicks them in order; the page's script keeps the list.
+function chooseLanguages() {
+  return (
+    `<h2>Welcome to Measure Twice</h2>` +
+    `<p>Which languages will you work in? Click them in order, <b>strongest ` +
+    `first</b>: start with the one you know best and end with the one you're ` +
+    `newest to. You can choose just one.</p>` +
+    `<div class="row picker">` +
+    LANGUAGES.map(([id, name]) => `<button data-pick="${id}">${name}</button>`).join("") +
+    `</div>` +
+    `<ol id="picked"></ol>` +
+    `<p class="muted" id="picked-empty">None chosen yet.</p>` +
+    `<div class="row"><button data-action="choose" id="choose" disabled>Start the guide</button>` +
+    `<button data-pick-reset class="secondary">Clear</button></div>`
+  );
+}
+
+function problems(state) {
+  return (
+    `<h2>Something needs fixing first</h2>` +
+    `<p>The guide checked your toolchains before starting:</p>` +
+    `<ul class="failures">` +
+    (state.problems || []).map((p) => `<li><span class="bad">✗</span> ${escape(p)}</li>`).join("") +
+    `</ul>` +
+    `<p>Fix these, then start the guide again.</p>` +
+    button("Start the guide", "start")
+  );
+}
+
+function render(state, { trusted = true, needsLanguages = false } = {}) {
   if (!trusted) {
     return untrusted();
+  }
+  if (state && state.status === "problems") {
+    return problems(state);
+  }
+  const running = state && ["setup", "testing", "ready"].includes(state.status);
+  if (needsLanguages && !running) {
+    return chooseLanguages();
   }
   if (state && state.status === "setup") {
     return (
@@ -161,4 +205,4 @@ function render(state, { trusted = true } = {}) {
   return out.join("\n");
 }
 
-module.exports = { render, escape, paragraphs };
+module.exports = { render, escape, paragraphs, LANGUAGES };

@@ -59,10 +59,10 @@ VS Code may first ask **"Do you trust the authors of the files in this
 folder?"** Choose **Trust Folder & Continue**: the guide runs each lesson's
 tests, and VS Code keeps terminals switched off until you do.
 
-Once it opens, the guide starts by itself in a terminal and asks which
-languages you'll work in. The **Measure Twice** panel in the sidebar follows
-along: each step, its tests, and buttons for hints and for opening the files.
-If you quit the guide, run `./scripts/guide` to start it again.
+Once it opens, the **Measure Twice** panel in the sidebar asks which
+languages you'll work in, then takes you through each step: what to do, which
+tests pass, and buttons for hints and for opening the files. The guide runs in
+a terminal behind it, re-running your tests every time you save.
 
 The codespace runs on your own GitHub account, not the course's: GitHub's
 "paid for by" notice will show your username. It comes out of your account's

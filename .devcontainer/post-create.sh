@@ -32,9 +32,9 @@ if sudo -n true 2>/dev/null; then
   sudo tee "$notice" > /dev/null <<'TEXT'
 Welcome to Measure Twice. Everything is installed.
 
-The guide starts by itself in the "Measure Twice guide" terminal, and
-the Measure Twice panel in the sidebar shows each step.
-Quit it? Use the panel's Start button, or run: ./scripts/guide
+The Measure Twice panel in the sidebar takes you through each step.
+The guide behind it runs in the "Measure Twice guide" terminal.
+Prefer the terminal? Run: ./scripts/guide
 Or read the course:      README.md
 
 TEXT

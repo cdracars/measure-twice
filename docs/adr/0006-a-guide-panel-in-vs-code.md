@@ -31,12 +31,18 @@ tests and stub.
   hint, and marks it stopped when it exits. The panel only displays that file.
   No guide logic lives in the extension, so the terminal and the panel can't
   disagree.
-- **The panel starts the guide.** When the course opens and the folder is
-  trusted, the panel starts the guide in a "Measure Twice guide" terminal
-  (in Restricted Mode, terminals are blocked, so it explains that and waits
-  for trust). This replaces an earlier first-terminal hook in `~/.bashrc`, so
-  there is one way to start. The guide itself refuses to run while another
-  guide is running, so two can never fight over the progress file.
+- **The panel is the interface in VS Code; the guide is the engine.** On the
+  first run the panel asks for languages (clicked in order, strongest first)
+  and runs `./scripts/guide start …`. When the course opens and the folder is
+  trusted, the panel starts the guide in a "Measure Twice guide" terminal that
+  stays in the background, with `GUIDE_PANEL=1` so the guide keeps that
+  terminal's screen to a short status. The terminal is one click away for the
+  full test output. If a toolchain is missing, the guide reports it to the
+  panel, since the learner may never look at the terminal.
+- **One way to start.** The panel replaces an earlier first-terminal hook in
+  `~/.bashrc`. In Restricted Mode terminals are blocked, so the panel explains
+  that and waits for trust. The guide refuses to run while another guide is
+  running, so two can never fight over the progress file.
 - **Buttons type keys.** Hint, Done and Full output send the same keys to the
   guide's terminal that a learner would type. The panel finds that terminal
   by matching the process IDs the guide writes into its state.
@@ -53,8 +59,9 @@ tests and stub.
 
 ## Consequences
 
-- The terminal guide works exactly as before, with or without the panel, and
-  in any editor. The panel is an extra view, not a requirement.
+- Outside VS Code, or run by hand without `GUIDE_PANEL`, the terminal guide
+  works exactly as before, in any editor. All the guide's logic stays in
+  `guide.py`; the panel never runs tests or tracks progress itself.
 - Changes to what a step shows go in `guide.py` (`panel_state`) and, if they
   need new layout, `render.js`. The panel's look follows the learner's VS Code
   theme through its CSS variables.

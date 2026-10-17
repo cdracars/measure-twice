@@ -510,6 +510,32 @@ class OpenLessonFilesTest(unittest.TestCase):
             guide.watch([], Progress())
         self.assertEqual(["setup", "stopped"], [s["status"] for s in published])
 
+    def test_a_missing_toolchain_is_shown_in_the_panel(self):
+        published = []
+        with (
+            mock.patch.object(guide, "publish", side_effect=published.append),
+            mock.patch.object(guide, "ensure_ready", return_value=False),
+            mock.patch.object(guide, "doctor", return_value=["Rust: cargo not found"]),
+        ):
+            guide.watch([], Progress(languages=["rust"]))
+        self.assertEqual({"status": "problems"}, {"status": published[-1]["status"]})
+        self.assertEqual(["Rust: cargo not found"], published[-1]["problems"])
+
+    def test_started_by_the_panel_the_terminal_stays_brief(self):
+        with mock.patch("builtins.print") as printed:
+            self.watch([], env={**IN_VSCODE, "GUIDE_PANEL": "1"})
+        text = "\n".join(str(c.args[0]) for c in printed.call_args_list if c.args)
+        self.assertIn(guide.PANEL_NOTE, text)
+        self.assertIn("1 failing", text)
+        self.assertNotIn("Next:", text)
+
+    def test_without_the_panel_the_terminal_shows_the_whole_step(self):
+        with mock.patch("builtins.print") as printed:
+            self.watch([])
+        text = "\n".join(str(c.args[0]) for c in printed.call_args_list if c.args)
+        self.assertIn("Next:", text)
+        self.assertNotIn(guide.PANEL_NOTE, text)
+
     def test_quitting_tells_the_panel_the_guide_has_stopped(self):
         self.watch([])
         self.assertEqual("stopped", json.loads(self.state_file.read_text())["status"])
