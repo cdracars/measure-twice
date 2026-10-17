@@ -2,6 +2,18 @@
 
 **Stage 1 · Basics + TDD rhythm** · Languages: PHP · Python · TypeScript · Rust
 
+## What you're learning
+
+**Test-driven development (TDD):** the tests come first. They describe what
+the code must do, and you write code until they pass. A passing test is proof
+you can re-check any time, whoever wrote the code: you, a colleague, or an AI.
+It also tells you the moment a later change breaks something.
+
+In this lesson the tests are written for you. Read them first: they're the
+spec. You write the code in the stub. The filament math is something concrete
+to practise on; the habit is the point. From lesson 02 you write tests
+yourself.
+
 ## The problem
 
 A slicer tells you a print needs 4.2 m of filament. Your scale tells you the

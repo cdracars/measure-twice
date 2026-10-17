@@ -3,6 +3,17 @@
 # A hint is either one text, or a table with a text per language and a default.
 
 title = "Filament math"
+intro = """
+This lesson teaches test-driven development (TDD): the tests come first. They
+describe what the code must do, and you write code until they pass. Why it
+matters: a passing test is proof you can re-check any time, whoever wrote the
+code (you, a colleague, or an AI), and it tells you the moment a change breaks
+something.
+
+Here the tests are written for you, in the tests file. Read them first: they're
+the spec. You write the code in the stub. The filament math is just something
+concrete to practise on. From lesson 02 you write tests yourself.
+"""
 
 [files]
 php = { edit = "php/filament.php", tests = "php/test.php" }
@@ -13,8 +24,9 @@ rust = { edit = "rust/src/lib.rs", tests = "rust/tests/filament.rs" }
 [[exercise]]
 title = "Weight from a length"
 task = """
-Implement filament_grams: the weight in grams of a length of filament. The
-lesson README has the formula. Only the tests for this function count here.
+Make the filament_grams tests pass. They say what it must do: give the weight in
+grams of a length of filament. The lesson README has the formula. Only the tests
+for this function count here.
 """
 tests = ["weighs about 3 g", "zero length", "much heavier", "denser material"]
 learned = "turning a formula into code, and red → green"
@@ -27,8 +39,8 @@ hints = [
 [[exercise]]
 title = "Length from a weight"
 task = """
-Implement filament_length_mm: the length of filament in a given weight. It's
-the first function run backwards.
+Make the filament_length_mm tests pass: the length of filament in a given
+weight. It's the first function run backwards.
 """
 tests = ["1 kg spool", "back and forth"]
 learned = "working a calculation backwards, and reusing what you already wrote"
