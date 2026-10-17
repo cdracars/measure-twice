@@ -79,15 +79,12 @@ When you write your own tests from now on, ask where the boundaries are.
 Start with the language you know best, then do the ones you're learning, with
 your weakest last.
 
-Running `./scripts/guide`? It runs the tests for you and takes you through
-these steps one at a time: edit the stub, save, and watch the terminal.
-Without the guide, for each language:
-
-1. **Red:** `./scripts/check 02 rust` (or `php`, `python`, `ts`)
-2. **Green:** make the `nozzle_verdict` tests pass.
-3. **Your tests:** write the `needs_enclosure` tests, see them fail, then make
-   them pass.
-4. **Refactor:** with everything green, make it clearer.
+The guide takes you through this one step at a time: make the
+`nozzle_verdict` tests pass, write the `needs_enclosure` tests and watch them
+fail, make them pass, then refactor. It re-runs the tests every time you save,
+and it only counts your `needs_enclosure` tests once it has seen them fail. In
+a codespace it's already running in the terminal; anywhere else, start it
+with `./scripts/guide`.
 
 | Language | Stub you edit | Tests |
 | --- | --- | --- |
@@ -95,6 +92,19 @@ Without the guide, for each language:
 | Python | `python/temperature.py` | `python/test_temperature.py` |
 | TypeScript | `ts/temperature.ts` | `ts/temperature.test.ts` |
 | Rust | `rust/src/lib.rs` | `rust/tests/temperature.rs` |
+
+<details>
+<summary>Working without the guide</summary>
+
+The same steps by hand, for each language:
+
+1. **Red:** `./scripts/check 02 rust` (or `php`, `python`, `ts`)
+2. **Green:** make the `nozzle_verdict` tests pass.
+3. **Your tests:** write the `needs_enclosure` tests, see them fail, then make
+   them pass.
+4. **Refactor:** with everything green, make it clearer.
+
+</details>
 
 ## What's different between the languages
 
@@ -121,7 +131,8 @@ Then answer in your own words:
 
 ## Done when
 
-- [ ] `./scripts/check 02` passes in all four languages
+- [ ] The guide has taken you through lesson 02 in every language you chose
+  (without the guide: `./scripts/check 02` passes in each of them)
 - [ ] You wrote the `needs_enclosure` tests before its code, in each language
 - [ ] You can explain why the tests use 189, 190, 220 and 221 rather than 205
 

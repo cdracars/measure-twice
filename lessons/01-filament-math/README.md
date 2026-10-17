@@ -102,9 +102,23 @@ Start with the language you know best, then do the ones you're learning, with
 your weakest last. The first time through, you're working out the problem;
 after that, you're learning how each language expresses the same answer.
 
-Running `./scripts/guide`? It runs the tests for you and takes you through
-these steps one at a time: edit the stub, save, and watch the terminal.
-Without the guide, for each language:
+The guide takes you through this one step at a time: read your teammate's
+tests, make them pass, refactor, then add a test of your own. It re-runs the
+tests every time you save and tells you what to do next. In a codespace it's
+already running in the terminal; anywhere else, start it with
+`./scripts/guide`.
+
+| Language | Stub you edit | Tests |
+| --- | --- | --- |
+| PHP | `php/filament.php` | `php/test.php` |
+| Python | `python/filament.py` | `python/test_filament.py` |
+| TypeScript | `ts/filament.ts` | `ts/filament.test.ts` |
+| Rust | `rust/src/lib.rs` | `rust/tests/filament.rs` |
+
+<details>
+<summary>Working without the guide</summary>
+
+The same steps by hand, for each language:
 
 0. **Read the tests:** find the first test in the tests file and work out its
    expected answer by hand with the formula above. Now you know what the code
@@ -122,12 +136,7 @@ Without the guide, for each language:
    (density ≈ 1.21) or a 2.85 mm spool of PETG. Work out the expected value
    by hand *before* running it.
 
-| Language | Stub you edit | Tests |
-| --- | --- | --- |
-| PHP | `php/filament.php` | `php/test.php` |
-| Python | `python/filament.py` | `python/test_filament.py` |
-| TypeScript | `ts/filament.ts` | `ts/filament.test.ts` |
-| Rust | `rust/src/lib.rs` | `rust/tests/filament.rs` |
+</details>
 
 ## What's different between the languages
 
@@ -151,7 +160,8 @@ Then answer in your own words:
 
 ## Done when
 
-- [ ] `./scripts/check 01` passes in all four languages
+- [ ] The guide has taken you through lesson 01 in every language you chose
+  (without the guide: `./scripts/check 01` passes in each of them)
 - [ ] Each language has one test you wrote yourself
 - [ ] You can explain the float-comparison question without looking it up
 
