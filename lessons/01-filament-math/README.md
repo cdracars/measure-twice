@@ -162,8 +162,8 @@ after that, you're learning how each language expresses the same answer.
 The guide takes you through this one step at a time: read your teammate's
 tests, make them pass, refactor, then add a test of your own. It re-runs the
 tests every time you save and tells you what to do next. In a codespace it's
-already running in the terminal; anywhere else, start it with
-`./scripts/guide`.
+already running in the terminal, and the Measure Twice panel in the sidebar
+shows the same step; anywhere else, start it with `./scripts/guide`.
 
 | Language | Stub you edit | Tests |
 | --- | --- | --- |

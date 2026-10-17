@@ -1,5 +1,6 @@
 """Tests for the guide. Run: python3 -m unittest discover -s scripts"""
 
+import json
 import os
 import subprocess
 import tempfile
@@ -397,8 +398,10 @@ class OpenLessonFilesTest(unittest.TestCase):
     def setUp(self):
         temp = tempfile.TemporaryDirectory()
         self.addCleanup(temp.cleanup)
+        self.state_file = Path(temp.name) / "state.json"
         patches = [
             mock.patch.object(guide, "PROGRESS_FILE", Path(temp.name) / "progress.json"),
+            mock.patch.object(guide, "STATE_FILE", self.state_file),
             mock.patch.object(guide, "ensure_ready", return_value=True),
             mock.patch.object(guide, "clear_screen"),
             mock.patch.object(guide, "wait_until_quiet", side_effect=lambda _l, _g, f: f),
@@ -484,6 +487,25 @@ class OpenLessonFilesTest(unittest.TestCase):
     def test_the_step_does_not_claim_files_are_open_when_code_fails(self):
         self.code.return_value = subprocess.CompletedProcess([], 1)
         self.assertNotIn(guide.FILES_OPEN, self.printed_by_watch())
+
+    def test_quitting_tells_the_panel_the_guide_has_stopped(self):
+        self.watch([])
+        self.assertEqual("stopped", json.loads(self.state_file.read_text())["status"])
+
+    def test_the_panel_sees_each_test_run(self):
+        published = []
+        with mock.patch.object(guide, "publish", side_effect=published.append):
+            self.watch([])
+        ready = [s for s in published if s["status"] == "ready"]
+        self.assertEqual(1, len(ready))
+        self.assertEqual(["zero length"], [f["name"] for f in ready[0]["results"]["failing"]])
+
+    def test_a_hint_updates_the_panel(self):
+        published = []
+        with mock.patch.object(guide, "publish", side_effect=published.append):
+            self.watch(["h"])
+        ready = [s for s in published if s["status"] == "ready"]
+        self.assertEqual([[], ["one"]], [s["hints"]["shown"] for s in ready])
 
     def test_a_code_command_that_fails_to_start_is_not_an_error(self):
         self.code.side_effect = OSError("no such file")
@@ -571,6 +593,71 @@ class NextActionTest(unittest.TestCase):
     def test_another_lessons_progress_does_not_hide_the_intro(self):
         step = exercise(files=PHP_FILES, lesson_intro="This lesson is about TDD.")
         self.assertIn("This lesson is about TDD.", self.describe(step, done=["00.1:php"]))
+
+
+class PanelStateTest(unittest.TestCase):
+    """What the guide tells the VS Code panel about the current step."""
+
+    def state(self, step: Exercise, run=None, done=(), hints=0) -> dict:
+        progress = Progress(languages=["php"], done=set(done))
+        progress.hints[guide.step_key(step, "php")] = hints
+        return guide.panel_state(step, "php", progress, [step], run, files_open=True)
+
+    def run_with(self, step: Exercise, results: list[TestResult]) -> guide.Run:
+        return guide.Run(False, "", "", guide.evaluate(step, results), False)
+
+    def test_it_names_the_step_and_its_files_from_the_repository_root(self):
+        state = self.state(exercise(files=PHP_FILES))
+        self.assertEqual("Weight from a length", state["step"]["title"])
+        self.assertEqual(f"{LESSON_01}/README.md", state["files"]["readme"])
+        self.assertEqual(f"{LESSON_01}/php/test.php", state["files"]["tests"])
+        self.assertEqual(f"{LESSON_01}/php/filament.php", state["files"]["edit"])
+        self.assertTrue(state["step"]["next"].startswith("Next: read the tests"))
+
+    def test_before_the_tests_run_it_says_testing(self):
+        state = self.state(exercise(files=PHP_FILES))
+        self.assertEqual("testing", state["status"])
+        self.assertIsNone(state["results"])
+
+    def test_it_lists_failures_without_terminal_colours(self):
+        step = exercise(files=PHP_FILES)
+        failing = TestResult("zero_length_weighs_nothing", False, "expected 0, got 2.5")
+        state = self.state(step, self.run_with(step, [failing]))
+        self.assertEqual("ready", state["status"])
+        self.assertEqual(
+            [{"name": "zero length weighs nothing", "message": "expected 0, got 2.5"}],
+            state["results"]["failing"],
+        )
+        self.assertNotIn("\x1b", json.dumps(state))
+
+    def test_a_read_step_says_its_failures_are_expected(self):
+        step = exercise(kind="read", tests="all", files=PHP_FILES)
+        state = self.state(step, self.run_with(step, [TestResult("a", False)]))
+        self.assertEqual("quiet", state["results"]["tone"])
+        self.assertIn("no code yet", state["results"]["notice"])
+
+    def test_it_shows_only_the_hints_already_asked_for(self):
+        state = self.state(exercise(files=PHP_FILES), hints=2)
+        self.assertEqual({"shown": ["one", "two"], "total": 3}, state["hints"])
+
+    def test_the_lesson_intro_and_how_this_works_go_once_a_step_is_done(self):
+        step = exercise(files=PHP_FILES, lesson_intro="About TDD.")
+        self.assertEqual("About TDD.", self.state(step)["step"]["intro"])
+        later = self.state(step, done=["01.9:php"])["step"]
+        self.assertIsNone(later["intro"])
+        self.assertIsNone(later["how_this_works"])
+
+    def test_it_lists_this_process_so_the_panel_can_find_the_terminal(self):
+        self.assertIn(os.getppid(), self.state(exercise(files=PHP_FILES))["pids"])
+
+    def test_publishing_writes_json_and_never_breaks_the_guide(self):
+        with tempfile.TemporaryDirectory() as temp:
+            target = Path(temp) / "state.json"
+            with mock.patch.object(guide, "STATE_FILE", target):
+                guide.publish({"status": "stopped"})
+            self.assertEqual({"status": "stopped"}, json.loads(target.read_text()))
+            with mock.patch.object(guide, "STATE_FILE", Path(temp) / "missing" / "state.json"):
+                guide.publish({"status": "stopped"})
 
 
 if __name__ == "__main__":

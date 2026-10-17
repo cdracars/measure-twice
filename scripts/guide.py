@@ -39,6 +39,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 PROGRESS_FILE = ROOT / ".guide-progress.json"
+STATE_FILE = ROOT / ".guide-state.json"  # what the VS Code guide panel shows
 
 LANGUAGES = ("php", "python", "ts", "rust")
 LANGUAGE_NAMES = {"php": "PHP", "python": "Python", "ts": "TypeScript", "rust": "Rust"}
@@ -611,31 +612,37 @@ def describe(
     return "\n".join(lines)
 
 
-def report(exercise: Exercise, evaluation: Evaluation, seen_red: bool) -> str:
+def step_notice(exercise: Exercise, evaluation: Evaluation, seen_red: bool) -> tuple[str, str]:
+    """What the test results mean for this step, and how it reads: bad, good or quiet."""
     if not evaluation.selected:
-        return red("No tests for this step ran. The code may not compile: press o to see why.")
+        return "bad", "No tests for this step ran. The code may not compile: press o to see why."
+    if not evaluation.enough:
+        return "bad", (
+            f"Found {len(evaluation.selected)} test(s) for this step;"
+            f" write at least {exercise.min_tests}."
+        )
+    if exercise.kind == "tests-first" and evaluation.passed and not seen_red:
+        return "bad", (
+            "These pass, but I never saw them fail. Break the code on purpose,"
+            " save, watch the tests go red, then fix it."
+        )
+    if exercise.kind == "confirm" and evaluation.passed:
+        return "good", "Tests pass. Work through the checklist, then press d."
+    if exercise.kind == "read" and not evaluation.passed:
+        return "quiet", "These fail because there's no code yet. That's expected for now."
+    return "quiet", ""
+
+
+def report(exercise: Exercise, evaluation: Evaluation, seen_red: bool) -> str:
+    tone, notice = step_notice(exercise, evaluation, seen_red)
+    if not evaluation.selected:
+        return red(notice)
     passing = [r for r in evaluation.selected if r.passed]
     failing = [r for r in evaluation.selected if not r.passed]
     lines = [green(f"  ✓ {len(passing)} passing")] if passing else []
     lines.extend(describe_failure(r) for r in failing)
-    if not evaluation.enough:
-        lines.append(
-            red(
-                f"  Found {len(evaluation.selected)} test(s) for this step;"
-                f" write at least {exercise.min_tests}."
-            )
-        )
-    elif exercise.kind == "tests-first" and evaluation.passed and not seen_red:
-        lines.append(
-            red(
-                "  These pass, but I never saw them fail. Break the code on purpose,"
-                " save, watch the tests go red, then fix it."
-            )
-        )
-    elif exercise.kind == "confirm" and evaluation.passed:
-        lines.append(green("  Tests pass. Work through the checklist, then press d."))
-    elif exercise.kind == "read" and not evaluation.passed:
-        lines.append(dim("  These fail because there's no code yet. That's expected for now."))
+    if notice:
+        lines.append({"bad": red, "good": green, "quiet": dim}[tone](f"  {notice}"))
     return "\n".join(lines)
 
 
@@ -665,6 +672,8 @@ class Run:
     complete: bool
     text: str
     output: str
+    evaluation: Evaluation | None = None
+    seen_red: bool = False
 
 
 def check_step(exercise: Exercise, language: str, progress: Progress) -> Run:
@@ -674,11 +683,112 @@ def check_step(exercise: Exercise, language: str, progress: Progress) -> Run:
     key = step_key(exercise, language)
     if counts_as_red(evaluation):
         progress.seen_red.add(key)
-    complete = is_complete(exercise, evaluation, key in progress.seen_red)
+    seen_red = key in progress.seen_red
+    complete = is_complete(exercise, evaluation, seen_red)
     if complete:
         progress.done.add(key)
     progress.save(PROGRESS_FILE)
-    return Run(complete, report(exercise, evaluation, key in progress.seen_red), output)
+    text = report(exercise, evaluation, seen_red)
+    return Run(complete, text, output, evaluation, seen_red)
+
+
+# The VS Code guide panel (extensions/guide-panel) shows what the guide is doing.
+# The guide stays in charge: it writes its state to STATE_FILE, and the panel's
+# buttons type the same keys into the guide's terminal that a learner would.
+
+
+def ancestor_pids(limit: int = 4) -> list[int]:
+    """This process and its parents, so the panel can find the guide's terminal."""
+    pids = [os.getpid(), os.getppid()]
+    while len(pids) < limit + 1:
+        try:
+            stat = Path(f"/proc/{pids[-1]}/stat").read_text()
+        except OSError:
+            break
+        parent = int(stat.rsplit(")", 1)[1].split()[1])
+        if parent <= 1:
+            break
+        pids.append(parent)
+    return pids
+
+
+def panel_state(
+    exercise: Exercise,
+    language: str,
+    progress: Progress,
+    exercises: list[Exercise],
+    run: Run | None,
+    files_open: bool,
+) -> dict:
+    """Everything the panel shows for the current step, as plain JSON-ready data."""
+    all_steps = steps(exercises, progress.languages)
+    files = exercise.files.get(language, {})
+    lesson_dir = f"lessons/{exercise.lesson}"
+    key = step_key(exercise, language)
+    hints_shown = progress.hints.get(key, 0)
+    results = None
+    if run is not None and run.evaluation is not None:
+        tone, notice = step_notice(exercise, run.evaluation, run.seen_red)
+        results = {
+            "ran": bool(run.evaluation.selected),
+            "passing": sum(1 for r in run.evaluation.selected if r.passed),
+            "failing": [
+                {"name": readable(r.name), "message": r.message}
+                for r in run.evaluation.selected
+                if not r.passed
+            ],
+            "notice": notice,
+            "tone": tone,
+        }
+    return {
+        "version": 1,
+        "status": "testing" if run is None else "ready",
+        "pids": ancestor_pids(),
+        "lesson": {
+            "number": int(exercise.lesson[:2]),
+            "of": lesson_count(ROOT),
+            "title": exercise.lesson_title,
+        },
+        "language": LANGUAGE_NAMES[language],
+        "progress": {
+            "done": sum(1 for s in all_steps if step_key(*s) in progress.done),
+            "total": len(all_steps),
+        },
+        "step": {
+            "number": exercise.number,
+            "of": len([e for e in exercises if e.lesson == exercise.lesson]),
+            "title": exercise.title,
+            "kind": exercise.kind,
+            "intro": exercise.lesson_intro
+            if exercise.lesson_intro and not lesson_started(exercise, progress)
+            else None,
+            "task": exercise.task,
+            "next": next_action(exercise, language),
+            "how_this_works": None if progress.done else HOW_THIS_WORKS,
+            "checklist": list(exercise.checklist),
+        },
+        "files": {
+            "readme": f"{lesson_dir}/README.md",
+            "tests": f"{lesson_dir}/{files['tests']}" if files.get("tests") else None,
+            "edit": f"{lesson_dir}/{files['edit']}" if files.get("edit") else None,
+        },
+        "files_open": files_open,
+        "hints": {
+            "shown": [hint_text(h, language) for h in exercise.hints[:hints_shown]],
+            "total": len(exercise.hints),
+        },
+        "results": results,
+    }
+
+
+def publish(state: dict) -> None:
+    """Write the panel's state. The guide works the same if this fails."""
+    try:
+        temp = STATE_FILE.with_suffix(".tmp")
+        temp.write_text(json.dumps(state, indent=2) + "\n", encoding="utf-8")
+        temp.replace(STATE_FILE)
+    except OSError:
+        pass
 
 
 def ensure_ready(progress: Progress) -> bool:
@@ -789,6 +899,14 @@ def open_in_vscode(paths: list[Path]) -> bool:
 def watch(exercises: list[Exercise], progress: Progress, open_files: bool = True) -> int:
     if not ensure_ready(progress):
         return 1
+    try:
+        return watch_loop(exercises, progress, open_files)
+    finally:
+        finished_all = current_step(exercises, progress) is None
+        publish({"version": 1, "status": "all-done" if finished_all else "stopped"})
+
+
+def watch_loop(exercises: list[Exercise], progress: Progress, open_files: bool) -> int:
     files: dict[Path, float] = {}
     shown: str | None = None
     last = Run(False, "", "")
@@ -816,10 +934,12 @@ def watch(exercises: list[Exercise], progress: Progress, open_files: bool = True
             clear_screen()
             print(describe(exercise, language, progress, exercises, files_open))
             print(dim("Running the tests..."))
+            publish(panel_state(exercise, language, progress, exercises, None, files_open))
             last = check_step(exercise, language, progress)
             clear_screen()
             print(describe(exercise, language, progress, exercises, files_open))
             print(last.text)
+            publish(panel_state(exercise, language, progress, exercises, last, files_open))
             if last.complete:
                 print("\n" + finished(exercise, current_step(exercises, progress)))
                 time.sleep(2.5)
@@ -830,6 +950,7 @@ def watch(exercises: list[Exercise], progress: Progress, open_files: bool = True
             return 0
         if key == "h":
             show_hint(exercise, language, progress)
+            publish(panel_state(exercise, language, progress, exercises, last, files_open))
         elif key == "e":
             edit = exercise.files.get(language, {}).get("edit")
             if edit:

@@ -1,0 +1,43 @@
+{
+  "name": "guide-panel",
+  "publisher": "measure-twice",
+  "displayName": "Measure Twice guide",
+  "description": "Shows the Measure Twice guide's current step in a side panel.",
+  "version": "0.1.0",
+  "license": "MIT",
+  "private": true,
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "main": "./extension.js",
+  "extensionKind": ["workspace"],
+  "activationEvents": [
+    "workspaceContains:scripts/guide.py"
+  ],
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "measureTwice",
+          "title": "Measure Twice",
+          "icon": "media/icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "measureTwice": [
+        {
+          "type": "webview",
+          "id": "measureTwice.guide",
+          "name": "Guide"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "measureTwice.startGuide",
+        "title": "Measure Twice: Start the guide"
+      }
+    ]
+  }
+}

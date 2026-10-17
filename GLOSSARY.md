@@ -61,6 +61,14 @@ the first idea of domain modeling. Add terms as lessons introduce them.
 : An input at or just past the edge of a range, such as 190 and 189 for a
   range starting at 190. Bugs cluster there, so tests should too.
 
+**Guide**
+: `./scripts/guide`, which takes you through a lesson one step at a time and
+  re-runs that step's tests every time you save.
+
+**Guide panel**
+: The Measure Twice view in VS Code's sidebar. It shows the guide's current
+  step, with buttons for hints and for opening the lesson's files.
+
 **Ping-pong pairing**
 : Two people sharing one task: one writes a failing test, the other writes the
   code that makes it pass, then they swap. Lessons 01 and 02 use it as a

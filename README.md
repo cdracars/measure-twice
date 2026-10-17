@@ -56,8 +56,9 @@ Python, Node.js, Rust, Composer and uv already set up.
 [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/cdracars/measure-twice)
 
 Once it opens, the guide starts by itself in a terminal and asks which
-languages you'll work in. If you quit it, run `./scripts/guide` to start it
-again.
+languages you'll work in. The **Measure Twice** panel in the sidebar follows
+along: each step, its tests, and buttons for hints and for opening the files.
+If you quit the guide, run `./scripts/guide` to start it again.
 
 The codespace runs on your own GitHub account, not the course's: GitHub's
 "paid for by" notice will show your username. It comes out of your account's
