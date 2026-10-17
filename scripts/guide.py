@@ -534,7 +534,11 @@ def header(exercise: Exercise, language: str, progress: Progress, exercises: lis
 def next_action(exercise: Exercise, language: str) -> str:
     """What to do right now, in one line: which file to change, and that saving re-runs."""
     files = exercise.files.get(language, {})
-    edit, tests = files.get("edit", "the stub"), files.get("tests", "the tests file")
+
+    def path(kind: str, otherwise: str) -> str:
+        return f"lessons/{exercise.lesson}/{files[kind]}" if files.get(kind) else otherwise
+
+    edit, tests = path("edit", "the stub"), path("tests", "the tests file")
     if exercise.kind == "read":
         return (
             f"Next: open {tests} and work through the checklist. No code yet."
@@ -569,8 +573,15 @@ HOW_THIS_WORKS = (
 )
 
 
+FILES_OPEN = "The README, the tests and the file you edit are open in tabs in your editor."
+
+
 def describe(
-    exercise: Exercise, language: str, progress: Progress, exercises: list[Exercise]
+    exercise: Exercise,
+    language: str,
+    progress: Progress,
+    exercises: list[Exercise],
+    files_open: bool = False,
 ) -> str:
     lines = [header(exercise, language, progress, exercises), ""]
     if exercise.lesson_intro and not lesson_started(exercise, progress):
@@ -582,7 +593,10 @@ def describe(
         lines.append(f"Tests  lessons/{exercise.lesson}/{files.get('tests', '')}")
         lines.append(f"Edit   lessons/{exercise.lesson}/{files.get('edit', '')}")
         lines.append("")
-    lines.extend([bold(next_action(exercise, language)), ""])
+    lines.append(bold(next_action(exercise, language)))
+    if files_open:
+        lines.append(dim(FILES_OPEN))
+    lines.append("")
     if not progress.done:
         lines.extend([dim(HOW_THIS_WORKS), ""])
     if exercise.checklist:
@@ -779,6 +793,7 @@ def watch(exercises: list[Exercise], progress: Progress, open_files: bool = True
     shown: str | None = None
     last = Run(False, "", "")
     opened: str | None = None
+    files_open = False
     keys = "h hint · e edit · r README · o full output · d done · q quit  (then Enter)"
     while True:
         step = current_step(exercises, progress)
@@ -791,15 +806,19 @@ def watch(exercises: list[Exercise], progress: Progress, open_files: bool = True
             if shown == step_key(*step):
                 latest = wait_until_quiet(exercise.lesson, language, latest)
             files, shown = latest, step_key(*step)
-            if open_files and opened != shown and can_open_in_vscode():
-                open_in_vscode(lesson_files(exercise, language))
-            opened = shown
+            if opened != shown:
+                files_open = (
+                    open_files
+                    and can_open_in_vscode()
+                    and open_in_vscode(lesson_files(exercise, language))
+                )
+                opened = shown
             clear_screen()
-            print(describe(exercise, language, progress, exercises))
+            print(describe(exercise, language, progress, exercises, files_open))
             print(dim("Running the tests..."))
             last = check_step(exercise, language, progress)
             clear_screen()
-            print(describe(exercise, language, progress, exercises))
+            print(describe(exercise, language, progress, exercises, files_open))
             print(last.text)
             if last.complete:
                 print("\n" + finished(exercise, current_step(exercises, progress)))
