@@ -11,8 +11,9 @@ code (you, a colleague, or an AI), and it tells you the moment a change breaks
 something.
 
 Here the tests are written for you, in the tests file. Read them first: they're
-the spec. You write the code in the stub. The filament math is just something
-concrete to practise on. From lesson 02 you write tests yourself.
+the spec ("Reading the tests" in the lesson README shows how). You write the
+code in the stub. The filament math is just something concrete to practise on.
+From lesson 02 you write tests yourself.
 """
 
 [files]
