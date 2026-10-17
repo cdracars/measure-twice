@@ -52,8 +52,8 @@
       "extensions": [
         "rust-lang.rust-analyzer",
         "ms-python.python",
-        "charliermarsh.ruff",
-        "bmewburn.vscode-intelephense-client"
+        "bmewburn.vscode-intelephense-client",
+        "-vadimcn.vscode-lldb"
       ]
     }
   }
