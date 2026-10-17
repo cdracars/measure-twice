@@ -264,6 +264,11 @@ class CompleteTest(unittest.TestCase):
         evaluation = guide.evaluate(confirm, list(self.passing))
         self.assertFalse(guide.is_complete(confirm, evaluation, False))
 
+    def test_a_read_exercise_is_never_complete_on_its_own(self):
+        read = exercise(kind="read", tests="all")
+        evaluation = guide.evaluate(read, list(self.passing))
+        self.assertFalse(guide.is_complete(read, evaluation, False))
+
 
 class HintTest(unittest.TestCase):
     def test_a_plain_hint_is_the_same_in_every_language(self):
@@ -367,10 +372,12 @@ class LessonFilesTest(unittest.TestCase):
         self.assertGreater(len(exercises), 0)
         for e in exercises:
             with self.subTest(exercise=e.key):
-                self.assertIn(e.kind, ("check", "tests-first", "confirm"))
+                self.assertIn(e.kind, ("check", "tests-first", "confirm", "read"))
                 self.assertTrue(e.title and e.task and e.lesson_title and e.learned)
                 self.assertTrue(e.lesson_intro, "a guided lesson says what it teaches and why")
-                if e.kind != "confirm":
+                if e.kind in ("confirm", "read"):
+                    self.assertTrue(e.checklist, "checklist steps have a checklist")
+                else:
                     self.assertEqual(3, len(e.hints), "check exercises get three hints")
                 for hint in e.hints:
                     for language in guide.LANGUAGES:
@@ -493,6 +500,22 @@ class NextActionTest(unittest.TestCase):
     def test_a_step_that_needs_more_tests_says_to_add_one(self):
         action = guide.next_action(exercise(min_tests=7, files=PHP_FILES), "php")
         self.assertIn("add your test to php/test.php", action)
+
+    def test_a_read_step_says_to_open_the_tests_and_write_no_code(self):
+        action = guide.next_action(exercise(kind="read", files=PHP_FILES), "php")
+        self.assertIn("open php/test.php", action)
+        self.assertIn("No code yet", action)
+
+    def test_a_read_step_can_be_confirmed_while_the_tests_still_fail(self):
+        step, progress = exercise(kind="read", tests="all"), Progress(languages=["php"])
+        with tempfile.TemporaryDirectory() as temp, (
+            mock.patch.object(guide, "PROGRESS_FILE", Path(temp) / "progress.json"),
+            mock.patch.object(guide, "run_tests", return_value=([TestResult("a", False)], "")),
+            mock.patch.object(guide, "load_exercises", return_value=[step]),
+            mock.patch("builtins.print"),
+        ):
+            guide.confirm(step, "php", progress)
+        self.assertIn(guide.step_key(step, "php"), progress.done)
 
     def test_a_checklist_step_says_to_press_d(self):
         action = guide.next_action(exercise(kind="confirm", files=PHP_FILES), "php")

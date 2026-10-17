@@ -7,13 +7,13 @@ intro = """
 This lesson teaches test-driven development (TDD): the tests come first. They
 describe what the code must do, and you write code until they pass. Why it
 matters: a passing test is proof you can re-check any time, whoever wrote the
-code (you, a colleague, or an AI), and it tells you the moment a change breaks
+code (you, a teammate, or an AI), and it tells you the moment a change breaks
 something.
 
-Here the tests are written for you, in the tests file. Read them first: they're
-the spec ("Reading the tests" in the lesson README shows how). You write the
-code in the stub. The filament math is just something concrete to practise on.
-From lesson 02 you write tests yourself.
+The setup: a teammate turned the filament maker's data sheet into tests, and
+your job is to make them pass. Start by reading what they wrote: the tests are
+the spec ("Reading the tests" in the lesson README shows how). In lesson 02 you
+swap roles and write the tests yourself.
 """
 
 [files]
@@ -21,6 +21,21 @@ php = { edit = "php/filament.php", tests = "php/test.php" }
 python = { edit = "python/filament.py", tests = "python/test_filament.py" }
 ts = { edit = "ts/filament.ts", tests = "ts/filament.test.ts" }
 rust = { edit = "rust/src/lib.rs", tests = "rust/tests/filament.rs" }
+
+[[exercise]]
+title = "Read your teammate's tests"
+kind = "read"
+task = """
+Before any code, read the tests you've been handed. You're checking that you
+understand what they ask for, the way you would with a teammate's tests.
+"""
+tests = "all"
+learned = "reading tests as the spec, before writing code"
+checklist = [
+    "Open the tests file and find the first test: one metre of 1.75 mm PLA weighs about 3 g",
+    "Work out that answer by hand with the README's formula: about 2.98 g",
+    "Find that test's red ✗ below. It fails because there's no code yet, but it already knows the answer",
+]
 
 [[exercise]]
 title = "Weight from a length"

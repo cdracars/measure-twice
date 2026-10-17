@@ -188,7 +188,7 @@ class Exercise:
     number: int
     title: str
     task: str
-    kind: str  # "check", "tests-first", or "confirm"
+    kind: str  # "check", "tests-first", "confirm", or "read" (a checklist before any code)
     tests: tuple[str, ...] | str  # phrases matched against test names, or "all"
     exclude: tuple[str, ...]
     min_tests: int
@@ -262,7 +262,7 @@ def counts_as_red(evaluation: Evaluation) -> bool:
 
 
 def is_complete(exercise: Exercise, evaluation: Evaluation, seen_red: bool) -> bool:
-    if exercise.kind == "confirm":
+    if exercise.kind in ("confirm", "read"):
         return False  # the learner confirms it with `done`
     if not (evaluation.passed and evaluation.enough):
         return False
@@ -535,6 +535,11 @@ def next_action(exercise: Exercise, language: str) -> str:
     """What to do right now, in one line: which file to change, and that saving re-runs."""
     files = exercise.files.get(language, {})
     edit, tests = files.get("edit", "the stub"), files.get("tests", "the tests file")
+    if exercise.kind == "read":
+        return (
+            f"Next: open {tests} and work through the checklist. No code yet."
+            " Press d when it's done."
+        )
     if exercise.kind == "confirm":
         return "Next: work through the checklist, saving as you go. Press d when it's done."
     if exercise.kind == "tests-first":
@@ -615,6 +620,8 @@ def report(exercise: Exercise, evaluation: Evaluation, seen_red: bool) -> str:
         )
     elif exercise.kind == "confirm" and evaluation.passed:
         lines.append(green("  Tests pass. Work through the checklist, then press d."))
+    elif exercise.kind == "read" and not evaluation.passed:
+        lines.append(dim("  These fail because there's no code yet. That's expected for now."))
     return "\n".join(lines)
 
 
@@ -830,13 +837,14 @@ def show_hint(exercise: Exercise, language: str, progress: Progress) -> None:
 
 
 def confirm(exercise: Exercise, language: str, progress: Progress) -> None:
-    if exercise.kind != "confirm":
+    if exercise.kind not in ("confirm", "read"):
         print("This step finishes by itself when its tests pass.")
         return
-    results, _ = run_tests(exercise.lesson, language)
-    if not evaluate(exercise, results).passed:
-        print(red("Get the tests passing first, then confirm."))
-        return
+    if exercise.kind == "confirm":
+        results, _ = run_tests(exercise.lesson, language)
+        if not evaluate(exercise, results).passed:
+            print(red("Get the tests passing first, then confirm."))
+            return
     progress.done.add(step_key(exercise, language))
     progress.save(PROGRESS_FILE)
     print(finished(exercise, current_step(load_exercises(ROOT), progress)))
