@@ -567,7 +567,7 @@ def lesson_started(exercise: Exercise, progress: Progress) -> bool:
 HOW_THIS_WORKS = (
     "How this works: the ✗ lines below are tests failing on purpose, because the code"
     " isn't written yet. That's red.\n"
-    "Read the problem in the lesson README, write the code, and save. When every test"
+    "Read the lesson README and the tests, write the code, and save. When every test"
     " passes (green), you move on.\n"
     "Stuck? Type h and press Enter for a hint."
 )

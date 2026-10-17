@@ -33,44 +33,13 @@ weight (g)               = volume (cm³) × density (g/cm³)
 Typical densities: PLA ≈ 1.24 g/cm³, PETG ≈ 1.27 g/cm³. Check your filament
 maker's data sheet for exact values.
 
-### Worked example
-
-One metre (1000 mm) of 1.75 mm PLA, density 1.24 g/cm³. This is the first test
-in the tests file:
-
-```text
-radius       = 1.75 / 2        = 0.875 mm
-area         = π × 0.875²      ≈ 2.405 mm²
-volume (mm³) = 2.405 × 1000    ≈ 2405 mm³
-volume (cm³) = 2405 / 1000     ≈ 2.405 cm³
-weight       = 2.405 × 1.24    ≈ 2.98 g     ← the test's expected value
-```
-
-So 1 m of 1.75 mm PLA weighs about 3 g, and a 1 kg spool holds roughly
-1000 ÷ 2.98 ≈ 335 m. The test's expected value came from the spec, worked out
-before any code existed. That's what makes it a fair check of the code.
-
-## What you write
-
-Two functions, in each language:
-
-| Function | Takes | Returns |
-| --- | --- | --- |
-| `filament_grams` | length (mm), diameter (mm), density (g/cm³) | weight (g) |
-| `filament_length_mm` | weight (g), diameter (mm), density (g/cm³) | length (mm) |
-
-(TypeScript uses `filamentGrams` and `filamentLengthMm`, following its naming
-convention.)
-
-Ignore bad input such as negative lengths for now. Handling it is Lesson 05.
-
 ## Reading the tests
 
 Every test has the same three parts, whatever the language:
 
 1. **A name** that says the behaviour in plain words: "one metre of 1.75 mm
    PLA weighs about 3 g".
-2. **A call** to your function with some inputs: `filament_grams(1000.0, 1.75,
+2. **A call** to the function you'll write, with some inputs: `filament_grams(1000.0, 1.75,
    1.24)` means 1000 mm of 1.75 mm filament with a density of 1.24.
 3. **A check** that compares the answer with the expected value:
    `assert_close(2.98, …)` passes if the answer is within 0.01 of 2.98.
@@ -109,6 +78,38 @@ fn one_metre_of_pla_weighs_about_3_g() {
 When a test fails, the guide shows its name and the check's message, such as
 `expected 2.98 (± 0.01), got 0`. To write a test of your own later, copy one,
 then change its name, inputs and expected value.
+
+## Worked example
+
+The first test says one metre (1000 mm) of 1.75 mm PLA, density 1.24 g/cm³,
+weighs 2.98 g. Here's where that number comes from, one line of the formula at
+a time:
+
+```text
+radius       = 1.75 / 2        = 0.875 mm
+area         = π × 0.875²      ≈ 2.405 mm²
+volume (mm³) = 2.405 × 1000    ≈ 2405 mm³
+volume (cm³) = 2405 / 1000     ≈ 2.405 cm³
+weight       = 2.405 × 1.24    ≈ 2.98 g     ← the test's expected value
+```
+
+So 1 m of 1.75 mm PLA weighs about 3 g, and a 1 kg spool holds roughly
+1000 ÷ 2.98 ≈ 335 m. The test's expected value came from the spec, worked out
+before any code existed. That's what makes it a fair check of the code.
+
+## What you write
+
+Two functions, in each language:
+
+| Function | Takes | Returns |
+| --- | --- | --- |
+| `filament_grams` | length (mm), diameter (mm), density (g/cm³) | weight (g) |
+| `filament_length_mm` | weight (g), diameter (mm), density (g/cm³) | length (mm) |
+
+(TypeScript uses `filamentGrams` and `filamentLengthMm`, following its naming
+convention.)
+
+Ignore bad input such as negative lengths for now. Handling it is Lesson 05.
 
 ## How to work through it
 

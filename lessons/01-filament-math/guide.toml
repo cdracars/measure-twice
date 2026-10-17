@@ -32,8 +32,9 @@ understand what they ask for, the way you would with a teammate's tests.
 tests = "all"
 learned = "reading tests as the spec, before writing code"
 checklist = [
-    "Open the tests file and find the first test: one metre of 1.75 mm PLA weighs about 3 g",
-    "Follow the README's worked example and see that it ends at 2.98 g, the number in that test",
+    "Read \"The problem\" in the lesson README",
+    "Open the tests file and find the first test: one metre of 1.75 mm PLA weighs about 3 g (the README's \"Reading the tests\" shows how)",
+    "Follow the README's \"Worked example\" and see that it ends at 2.98 g, that test's number",
     "Find that test's red ✗ below. It fails because there's no code yet, but it already knows the answer",
 ]
 
