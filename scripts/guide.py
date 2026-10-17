@@ -249,7 +249,15 @@ def evaluate(exercise: Exercise, results: list[TestResult]) -> Evaluation:
             return True
         return any(matches(result.name, phrase) for phrase in exercise.tests)
 
-    selected = [r for r in results if wanted(r)]
+    def order(result: TestResult) -> tuple[int, str]:
+        """The step's phrase order, then by name, so the list stays put between runs."""
+        phrases = () if exercise.tests == "all" else exercise.tests
+        first = next(
+            (i for i, phrase in enumerate(phrases) if matches(result.name, phrase)), len(phrases)
+        )
+        return first, normalize(result.name)
+
+    selected = sorted((r for r in results if wanted(r)), key=order)
     passed = bool(selected) and all(r.passed for r in selected)
     return Evaluation(selected, passed, enough=len(selected) >= exercise.min_tests)
 
@@ -502,7 +510,10 @@ def tail(text: str, lines: int = 60) -> str:
     return "\n".join([dim(f"... ({len(kept) - lines} earlier lines hidden)"), *kept[-lines:]])
 
 
-def describe_failure(result: TestResult) -> str:
+def describe_result(result: TestResult) -> str:
+    """One line for a passing test; a failing one adds its message and location."""
+    if result.passed:
+        return f"  {green('✓')} {readable(result.name)}"
     lines = [f"  {red('✗')} {readable(result.name)}"]
     if result.message:
         lines.append(f"      {result.message}")
@@ -554,10 +565,10 @@ def describe(
 def report(exercise: Exercise, evaluation: Evaluation, seen_red: bool) -> str:
     if not evaluation.selected:
         return red("No tests for this step ran. The code may not compile: press o to see why.")
-    passing = [r for r in evaluation.selected if r.passed]
-    failing = [r for r in evaluation.selected if not r.passed]
-    lines = [green(f"  ✓ {len(passing)} passing")] if passing else []
-    lines.extend(describe_failure(r) for r in failing)
+    passing = sum(1 for r in evaluation.selected if r.passed)
+    count = f"  {passing} of {len(evaluation.selected)} passing"
+    lines = [green(count) if evaluation.passed else bold(count)]
+    lines.extend(describe_result(r) for r in evaluation.selected)
     if not evaluation.enough:
         lines.append(
             red(
