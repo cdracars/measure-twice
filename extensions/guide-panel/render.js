@@ -71,7 +71,24 @@ function results(state) {
   return parts.join("");
 }
 
-function render(state) {
+// VS Code's Restricted Mode blocks terminals, so the guide can't run until the
+// learner trusts the folder. Say so plainly instead of showing a dead panel.
+function untrusted() {
+  return (
+    `<h2>Trust this folder to start</h2>` +
+    `<p>VS Code is asking whether you trust the authors of this folder. The ` +
+    `guide runs the lesson's tests, which needs a terminal, so VS Code keeps it ` +
+    `switched off until you choose <b>Trust</b>.</p>` +
+    `<p class="muted">This is the course repository you opened yourself. Trusting ` +
+    `it lets the guide and the tests run.</p>` +
+    button("Trust this folder", "trust")
+  );
+}
+
+function render(state, { trusted = true } = {}) {
+  if (!trusted) {
+    return untrusted();
+  }
   if (!state || state.version !== 1 || !state.step) {
     return notRunning(state);
   }

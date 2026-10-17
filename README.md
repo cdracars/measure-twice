@@ -55,6 +55,10 @@ Python, Node.js, Rust, Composer and uv already set up.
 
 [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/cdracars/measure-twice)
 
+VS Code may first ask **"Do you trust the authors of the files in this
+folder?"** Choose **Trust Folder & Continue**: the guide runs each lesson's
+tests, and VS Code keeps terminals switched off until you do.
+
 Once it opens, the guide starts by itself in a terminal and asks which
 languages you'll work in. The **Measure Twice** panel in the sidebar follows
 along: each step, its tests, and buttons for hints and for opening the files.

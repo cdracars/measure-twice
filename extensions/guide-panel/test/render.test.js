@@ -43,6 +43,13 @@ function state(overrides = {}) {
   };
 }
 
+test("in Restricted Mode it asks for trust instead of showing the step", () => {
+  const html = render(state(), { trusted: false });
+  assert.match(html, /Trust this folder to start/);
+  assert.match(html, /data-action="trust"/);
+  assert.doesNotMatch(html, /Step 1 of 5/);
+});
+
 test("a stopped guide offers to start it", () => {
   const html = render({ version: 1, status: "stopped" });
   assert.match(html, /isn't running/);

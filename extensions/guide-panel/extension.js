@@ -66,12 +66,15 @@ class GuidePanel {
 
   refresh() {
     if (this.view) {
-      this.view.webview.postMessage({ type: "render", html: render(this.state()) });
+      const html = render(this.state(), { trusted: vscode.workspace.isTrusted });
+      this.view.webview.postMessage({ type: "render", html });
     }
   }
 
   async handle({ action, value }) {
-    if (action === "open") {
+    if (action === "trust") {
+      await vscode.commands.executeCommand("workbench.trust.manage");
+    } else if (action === "open") {
       await vscode.commands.executeCommand("vscode.open", vscode.Uri.file(path.join(this.root, value)));
     } else if (action === "start") {
       await startGuide(this.root);
@@ -184,6 +187,7 @@ function activate(context) {
     }),
     vscode.commands.registerCommand("measureTwice.startGuide", () => startGuide(root)),
     vscode.window.onDidCloseTerminal(() => panel.refresh()),
+    vscode.workspace.onDidGrantWorkspaceTrust(() => panel.refresh()),
   );
 
   // Polling is simple and works the same in Codespaces, dev containers and locally.

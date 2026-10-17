@@ -11,6 +11,12 @@
   },
   "main": "./extension.js",
   "extensionKind": ["workspace"],
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": "limited",
+      "description": "In Restricted Mode the panel only explains that the guide needs the folder to be trusted, because it runs the lesson tests."
+    }
+  },
   "activationEvents": [
     "workspaceContains:scripts/guide.py"
   ],
