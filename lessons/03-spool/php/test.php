@@ -102,6 +102,7 @@ test('consuming shortens the remaining length', function () {
     assert_close(167_640.0, $spool->remainingLengthMm(), 50.0);
 });
 
+// The tiny test runner reports the result. Nothing to change below this line.
 if ($failures > 0) {
     echo "\n{$failures} failed\n";
     exit(1);

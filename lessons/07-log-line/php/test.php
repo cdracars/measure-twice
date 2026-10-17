@@ -110,6 +110,7 @@ test('blank text is empty', function () {
     assert_throws(EmptyText::class, fn () => parse_entry('2026-10-16:   '));
 });
 
+// The tiny test runner reports the result. Nothing to change below this line.
 if ($failures > 0) {
     echo "\n{$failures} failed\n";
     exit(1);

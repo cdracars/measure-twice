@@ -135,6 +135,7 @@ test('appending to an existing log keeps what was there', function () {
     assert_same(3, count($log->problems));
 });
 
+// The tiny test runner reports the result. Nothing to change below this line.
 if ($failures > 0) {
     echo "\n{$failures} failed\n";
     exit(1);

@@ -92,6 +92,7 @@ test('an unknown material does not need an enclosure', function () {
     assert_same(false, needs_enclosure('Nylon'));
 });
 
+// The tiny test runner reports the result. Nothing to change below this line.
 if ($failures > 0) {
     echo "\n{$failures} failed\n";
     exit(1);

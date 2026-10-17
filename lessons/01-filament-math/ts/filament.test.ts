@@ -35,7 +35,7 @@ test("length and weight convert back and forth", () => {
   assertClose(4200, filamentLengthMm(grams, 1.75, 1.24));
 });
 
-// Your turn: add one test of your own here.
+// Last step of this lesson: add one test of your own here. The guide tells you when.
 
 test("one metre of 1.75 mm TPU weighs about 2.91 g", () => {
   assertClose(2.91, filamentGrams(1000, 1.75, 1.21));

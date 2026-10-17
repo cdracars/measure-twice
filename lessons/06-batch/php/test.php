@@ -88,6 +88,7 @@ test('the first of two equally heavy jobs wins', function () {
     assert_same('left bracket', heaviest_job($jobs)?->name);
 });
 
+// The tiny test runner reports the result. Nothing to change below this line.
 if ($failures > 0) {
     echo "\n{$failures} failed\n";
     exit(1);

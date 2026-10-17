@@ -23,7 +23,7 @@ class FilamentMathTest(unittest.TestCase):
         grams = filament_grams(4200.0, 1.75, 1.24)
         self.assertAlmostEqual(4200.0, filament_length_mm(grams, 1.75, 1.24), delta=0.01)
 
-    # Your turn: add one test of your own here.
+    # Last step of this lesson: add one test of your own here. The guide tells you when.
 
     def test_one_metre_of_tpu_weighs_about_2_91_g(self):
         self.assertAlmostEqual(2.91, filament_grams(1000.0, 1.75, 1.21), delta=0.01)

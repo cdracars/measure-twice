@@ -134,6 +134,7 @@ test('log needs exactly one argument', function () {
     assert_output(new Output(2, stderr: "jig: usage: jig log <file>\n"), run(['log']));
 });
 
+// The tiny test runner reports the result. Nothing to change below this line.
 if ($failures > 0) {
     echo "\n{$failures} failed\n";
     exit(1);

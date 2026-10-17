@@ -136,6 +136,7 @@ test('parse_material rejects empty input', function () {
     assert_throws(UnknownMaterial::class, fn () => parse_material(''));
 });
 
+// The tiny test runner reports the result. Nothing to change below this line.
 if ($failures > 0) {
     echo "\n{$failures} failed\n";
     exit(1);
