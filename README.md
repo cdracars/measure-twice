@@ -48,8 +48,9 @@ lesson.
 
 Click the badge to open the course in a GitHub Codespace: VS Code in your
 browser with PHP 8.4, Python, Node.js, Rust, Composer and uv already set up.
-The first start takes a few minutes while it builds; after that, open a
-terminal and run `./scripts/guide`.
+The first start takes a few minutes while it builds; after that, the guide
+starts by itself in a terminal and asks which languages you'll work in. If you
+close it, run `./scripts/guide` to start it again.
 
 The codespace runs on your own GitHub account, not the course's: GitHub's
 "paid for by" notice will show your username. It comes out of your account's

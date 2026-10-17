@@ -20,8 +20,9 @@ if sudo -n true 2>/dev/null; then
   sudo tee "$notice" > /dev/null <<'TEXT'
 Welcome to Measure Twice. Everything is installed.
 
-Start the guide:     ./scripts/guide
-Or read the course:  README.md
+The guide starts by itself in the "Measure Twice guide" terminal.
+Closed it? Start it again: ./scripts/guide
+Or read the course:        README.md
 
 TEXT
 fi
