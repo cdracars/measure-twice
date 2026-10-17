@@ -508,14 +508,13 @@ class NextActionTest(unittest.TestCase):
 
     def test_a_read_step_can_be_confirmed_while_the_tests_still_fail(self):
         step, progress = exercise(kind="read", tests="all"), Progress(languages=["php"])
+        failing = ([TestResult("a", False)], "")
         with (
             tempfile.TemporaryDirectory() as temp,
-            (
-                mock.patch.object(guide, "PROGRESS_FILE", Path(temp) / "progress.json"),
-                mock.patch.object(guide, "run_tests", return_value=([TestResult("a", False)], "")),
-                mock.patch.object(guide, "load_exercises", return_value=[step]),
-                mock.patch("builtins.print"),
-            ),
+            mock.patch.object(guide, "PROGRESS_FILE", Path(temp) / "progress.json"),
+            mock.patch.object(guide, "run_tests", return_value=failing),
+            mock.patch.object(guide, "load_exercises", return_value=[step]),
+            mock.patch("builtins.print"),
         ):
             guide.confirm(step, "php", progress)
         self.assertIn(guide.step_key(step, "php"), progress.done)
