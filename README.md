@@ -44,15 +44,16 @@ lesson.
 
 ### The quick way: nothing to install
 
-[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/cdracars/measure-twice)
+Open the course in a GitHub Codespace: VS Code in your browser with PHP 8.4,
+Python, Node.js, Rust, Composer and uv already set up.
 
-Click the badge to open the course in a GitHub Codespace: VS Code in your
-browser with PHP 8.4, Python, Node.js, Rust, Composer and uv already set up.
-
+> [!NOTE]
 > **The first start is slow.** A new codespace installs four languages'
 > toolchains before it opens, which takes several minutes. The page may sit on
 > "Setting up your codespace" for a while: that's normal, so leave it running.
 > Reopening the same codespace later takes seconds.
+
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/cdracars/measure-twice)
 
 Once it opens, the guide starts by itself in a terminal and asks which
 languages you'll work in. If you quit it, run `./scripts/guide` to start it
