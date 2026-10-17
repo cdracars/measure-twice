@@ -33,7 +33,7 @@ tests = "all"
 learned = "reading tests as the spec, before writing code"
 checklist = [
     "Open the tests file and find the first test: one metre of 1.75 mm PLA weighs about 3 g",
-    "Work out that answer by hand with the README's formula: about 2.98 g",
+    "Follow the README's worked example and see that it ends at 2.98 g, the number in that test",
     "Find that test's red ✗ below. It fails because there's no code yet, but it already knows the answer",
 ]
 
@@ -85,7 +85,8 @@ checklist = [
 title = "A test of your own"
 task = """
 Add one test of your own to the tests file: one more test than the six you
-were given. Work out the expected value by hand before you run it.
+were given. Work out the expected value by hand before you run it, the same way
+as the README's worked example.
 """
 tests = "all"
 min_tests = 7

@@ -33,8 +33,22 @@ weight (g)               = volume (cm³) × density (g/cm³)
 Typical densities: PLA ≈ 1.24 g/cm³, PETG ≈ 1.27 g/cm³. Check your filament
 maker's data sheet for exact values.
 
-**Sanity check you can do by hand:** 1 m of 1.75 mm PLA weighs about 3 g, so a
-1 kg spool holds roughly 335 m.
+### Worked example
+
+One metre (1000 mm) of 1.75 mm PLA, density 1.24 g/cm³. This is the first test
+in the tests file:
+
+```text
+radius       = 1.75 / 2        = 0.875 mm
+area         = π × 0.875²      ≈ 2.405 mm²
+volume (mm³) = 2.405 × 1000    ≈ 2405 mm³
+volume (cm³) = 2405 / 1000     ≈ 2.405 cm³
+weight       = 2.405 × 1.24    ≈ 2.98 g     ← the test's expected value
+```
+
+So 1 m of 1.75 mm PLA weighs about 3 g, and a 1 kg spool holds roughly
+1000 ÷ 2.98 ≈ 335 m. The test's expected value came from the spec, worked out
+before any code existed. That's what makes it a fair check of the code.
 
 ## What you write
 
@@ -120,9 +134,9 @@ already running in the terminal; anywhere else, start it with
 
 The same steps by hand, for each language:
 
-0. **Read the tests:** find the first test in the tests file and work out its
-   expected answer by hand with the formula above. Now you know what the code
-   must do before you write any.
+0. **Read the tests:** find the first test in the tests file, then follow the
+   [worked example](#worked-example) and see that it ends at the same 2.98 g.
+   Now you know what the code must do before you write any.
 1. **Red:** run the tests and watch them fail. Read the failure message.
    ```sh
    ./scripts/check 01 rust     # or php, python, ts
@@ -134,7 +148,7 @@ The same steps by hand, for each language:
    tests again.
 4. **Your test:** add one test of your own to the test file. Suggestion: TPU
    (density ≈ 1.21) or a 2.85 mm spool of PETG. Work out the expected value
-   by hand *before* running it.
+   by hand *before* running it, the same way as the worked example.
 
 </details>
 
