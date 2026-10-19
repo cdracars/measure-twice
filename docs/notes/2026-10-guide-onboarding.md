@@ -30,21 +30,20 @@ tooling: `scripts/guide`, the dev container, and onboarding in Codespaces.
 
 ### Where things stand
 
-- Branch **`guide-open-lesson-files`**, pushed, **not merged, no PR**. Four
-  commits on top of `main`:
-  - `54c9621` Open the lesson README and stub when a guided step starts
+- `54c9621` (open the lesson README and stub per step) is on `main`, merged
+  as `4354eee` with Cody's follow-up `c09eb2b` (`GUIDE_NO_OPEN=0` leaves
+  opening on). Cody's billing note is on `main` too (`edf4af5`).
+- The rest is in a pull request from **`guide-open-lesson-files`**, with
+  `main` merged in:
   - `726c9a0` Keep a step's tests in a stable list, so a fixed test turns
     green in place
   - `f3bbaf9` Note two ideas under consideration: Go, and only the learner's
     languages
   - `7806d99` Show only the chosen languages' lesson folders in VS Code's
     Explorer
-- Cody's local `main` had one unpushed commit adding a billing note to the
-  README's Codespaces section. This branch's README edits are in "Start with
-  the guide", away from that section, so a clean merge is expected (not
-  checked).
-- Verified on the branch: 58 guide unit tests pass; `verify --structure`
-  passes; ruff, PHP syntax, TypeScript typecheck, cargo fmt and clippy pass.
+  - `84323d0` Add these notes; `106b5e3` point AGENTS.md at `docs/notes/`
+- Verified after merging `main`: 77 guide unit tests pass; `verify
+  --structure` passes; ruff check and format pass.
 - **Not yet tried in a real Codespace.** See "To check" below.
 
 ### What changed and why
