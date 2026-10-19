@@ -772,6 +772,25 @@ class PanelStateTest(unittest.TestCase):
         )
         self.assertNotIn("\x1b", json.dumps(state))
 
+    def test_it_lists_every_test_in_the_steps_order_so_a_fixed_one_stays_put(self):
+        step = exercise(tests=["weighs about 3 g", "zero length"], files=PHP_FILES)
+        results = [
+            TestResult("zero_length_weighs_nothing", True),
+            TestResult("one_metre_weighs_about_3_g", False, "expected 2.98, got 0"),
+        ]
+        state = self.state(step, self.run_with(step, results))
+        self.assertEqual(
+            [
+                {
+                    "name": "one metre weighs about 3 g",
+                    "passed": False,
+                    "message": "expected 2.98, got 0",
+                },
+                {"name": "zero length weighs nothing", "passed": True, "message": ""},
+            ],
+            state["results"]["tests"],
+        )
+
     def test_a_read_step_says_its_failures_are_expected(self):
         step = exercise(kind="read", tests="all", files=PHP_FILES)
         state = self.state(step, self.run_with(step, [TestResult("a", False)]))

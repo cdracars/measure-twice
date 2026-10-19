@@ -146,7 +146,7 @@ class GuidePanel {
   .checklist li { margin: 0.35em 0; }
   .checklist label { display: flex; gap: 6px; align-items: flex-start; }
   .checklist input { margin-top: 0.3em; }
-  .failures li { margin: 0.4em 0; }
+  .tests li { margin: 0.4em 0; }
   .message { font-family: var(--vscode-editor-font-family); font-size: 0.92em; color: var(--vscode-descriptionForeground); margin-left: 1.2em; }
   .hint { padding: 6px 10px; border-radius: 4px; background: var(--vscode-textBlockQuote-background); }
   .how { margin-top: 1.4em; font-size: 0.92em; }
