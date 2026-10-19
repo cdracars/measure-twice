@@ -103,7 +103,8 @@ You learn these by working inside them, not by reading about them:
   ([ADR 0004](docs/adr/0004-a-guide-runner.md)); lessons 01–02 so far
 - Shared vocabulary in [GLOSSARY.md](GLOSSARY.md)
 - A dev container, so the course opens ready to use in GitHub Codespaces
-  ([ADR 0005](docs/adr/0005-a-dev-container.md))
+  ([ADR 0005](docs/adr/0005-a-dev-container.md)), with a guide panel in VS
+  Code's sidebar ([ADR 0006](docs/adr/0006-a-guide-panel-in-vs-code.md))
 - Later: conventional commits, pre-commit hooks
 
 ## Reading
