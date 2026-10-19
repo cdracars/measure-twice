@@ -30,6 +30,11 @@ tooling: `scripts/guide`, the dev container, and onboarding in Codespaces.
 
 ### Where things stand
 
+**Update 2026-10-19:** `guide-panel` (ADR 0006) and then this branch were
+merged into `main`, and `main` into `solutions`. The panel shows the same
+stable test list as the terminal. The rest of this section is as of the
+session's end, before those merges.
+
 - `54c9621` (open the lesson README and stub per step) is on `main`, merged
   as `4354eee` with Cody's follow-up `c09eb2b` (`GUIDE_NO_OPEN=0` leaves
   opening on). Cody's billing note is on `main` too (`edf4af5`).
@@ -98,39 +103,12 @@ tooling: `scripts/guide`, the dev container, and onboarding in Codespaces.
 - Authors editing lesson READMEs in a codespace get the preview first;
   "Reopen Editor With…" switches back.
 
-### Ideas under consideration
+### Parked ideas
 
-Both are also recorded in CURRICULUM.md, "Ideas under consideration".
-
-**Only the learner's languages in the dev container** (Cody's original
-intention; the Explorer part above was the easy win). The goal is to install
-only the chosen toolchains, for faster starts. From GitHub's docs:
-- Extra configurations go at `.devcontainer/<name>/devcontainer.json`,
-  exactly one level deep. The codespace creation page lists them in a
-  dropdown.
-- "Share a deep link" builds a `codespaces.new` link or badge with a
-  configuration chosen. The URL parameter's name isn't documented, so copy it
-  from that dialog.
-- Configurations can't inherit from each other, so shared settings are
-  duplicated. Learners wanting two languages need a combined or full
-  configuration.
-- Alternative: one lean configuration where the guide installs toolchains on
-  demand after `start`.
-- Either way, today's base image is PHP's; a lean configuration needs a
-  neutral base.
-- Claude's lean: per-language badges. Not decided.
-
-**Go as a fifth language.**
-- Fit: `go test` is built in (fits ADR 0001), and `go test -json` is easy to
-  parse.
-- Use subtests (`t.Run("zero length weighs nothing", …)`) so the guide's
-  phrases match test names.
-- New contrasts: no real enums (lesson 04), unchecked errors as values (05),
-  strings as bytes (07), implicit interfaces (A6).
-- Costs: Go content for all 10 lessons, a weaker story for lesson 10, and a
-  fifth comparison column.
-- Suggested first step: port lesson 01, plus 05 or 07, on a branch. Go
-  versions and the dev container Go feature not yet checked.
+Go as a fifth language, and dev containers that install only the learner's
+languages, were discussed in this session. On 2026-10-19 Cody parked both as
+too experimental: the aim for now is a stable guide and onboarding. They're
+kept out of the repo, including CURRICULUM.md, until he decides otherwise.
 
 ### Possible next steps
 
@@ -138,8 +116,6 @@ only the chosen toolchains, for faster starts. From GitHub's docs:
 - Merge or open a PR for `guide-open-lesson-files`, after Cody's billing-note
   commit is pushed.
 - Possibly mention the new behaviour in ADR 0004 and 0005 (not done).
-- Decide on per-language containers; if yes, prototype one language's
-  configuration and badge.
 
 ### Sources
 
