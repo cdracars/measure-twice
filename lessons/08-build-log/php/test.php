@@ -115,6 +115,7 @@ test('appending to a new file creates it', function () {
     assert_same(['2026-10-19: levelled the bed'], lines(load_log($path)->entries));
 });
 
+// The tiny test runner reports the result. Nothing to change below this line.
 if ($failures > 0) {
     echo "\n{$failures} failed\n";
     exit(1);

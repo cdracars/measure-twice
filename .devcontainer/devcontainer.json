@@ -19,9 +19,10 @@
     "XDEBUG_MODE": "off"
   },
   "postCreateCommand": "bash .devcontainer/post-create.sh",
+  "waitFor": "postCreateCommand",
   "customizations": {
     "codespaces": {
-      "openFiles": ["README.md", "lessons/01-filament-math/README.md"]
+      "openFiles": ["README.md"]
     },
     "vscode": {
       "settings": {

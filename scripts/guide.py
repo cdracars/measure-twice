@@ -191,13 +191,14 @@ class Exercise:
     number: int
     title: str
     task: str
-    kind: str  # "check", "tests-first", or "confirm"
+    kind: str  # "check", "tests-first", "confirm", or "read" (a checklist before any code)
     tests: tuple[str, ...] | str  # phrases matched against test names, or "all"
     exclude: tuple[str, ...]
     min_tests: int
     hints: tuple[Hint, ...]
     checklist: tuple[str, ...]
     lesson_title: str = ""
+    lesson_intro: str = ""  # what the lesson teaches and why, shown as it starts
     learned: str = ""
     files: dict[str, dict[str, str]] = field(default_factory=dict, compare=False)
 
@@ -226,6 +227,7 @@ def load_exercises(root: Path) -> list[Exercise]:
                     hints=tuple(item.get("hints", ())),
                     checklist=tuple(item.get("checklist", ())),
                     lesson_title=data.get("title", lesson),
+                    lesson_intro=data.get("intro", "").strip(),
                     learned=item.get("learned", ""),
                     files=data.get("files", {}),
                 )
@@ -271,7 +273,7 @@ def counts_as_red(evaluation: Evaluation) -> bool:
 
 
 def is_complete(exercise: Exercise, evaluation: Evaluation, seen_red: bool) -> bool:
-    if exercise.kind == "confirm":
+    if exercise.kind in ("confirm", "read"):
         return False  # the learner confirms it with `done`
     if not (evaluation.passed and evaluation.enough):
         return False
@@ -543,16 +545,74 @@ def header(exercise: Exercise, language: str, progress: Progress, exercises: lis
     )
 
 
+def next_action(exercise: Exercise, language: str) -> str:
+    """What to do right now, in one line: which file to change, and that saving re-runs."""
+    files = exercise.files.get(language, {})
+
+    def path(kind: str, otherwise: str) -> str:
+        return f"lessons/{exercise.lesson}/{files[kind]}" if files.get(kind) else otherwise
+
+    edit, tests = path("edit", "the stub"), path("tests", "the tests file")
+    if exercise.kind == "read":
+        return (
+            f"Next: open {tests} and work through the checklist. No code yet."
+            " Press d when it's done."
+        )
+    if exercise.kind == "confirm":
+        return "Next: work through the checklist, saving as you go. Press d when it's done."
+    if exercise.kind == "tests-first":
+        return (
+            f"Next: write the tests in {tests} first and save. Watch them fail,"
+            f" then make them pass in {edit}."
+        )
+    if exercise.min_tests > 1:
+        return f"Next: add your test to {tests}, then save. The tests re-run here."
+    return (
+        f"Next: read the tests in {tests}, then write the code in {edit} and save."
+        " The tests re-run here."
+    )
+
+
+def lesson_started(exercise: Exercise, progress: Progress) -> bool:
+    """Any step of this lesson done, in any language."""
+    return any(key.startswith(f"{exercise.lesson[:2]}.") for key in progress.done)
+
+
+HOW_THIS_WORKS = (
+    "How this works: the ✗ lines below are tests failing on purpose, because the code"
+    " isn't written yet. That's red.\n"
+    "Read the lesson README and the tests, write the code, and save. When every test"
+    " passes (green), you move on.\n"
+    "Stuck? Type h and press Enter for a hint."
+)
+
+
+FILES_OPEN = "The README, the tests and the file you edit are open in tabs in your editor."
+
+
 def describe(
-    exercise: Exercise, language: str, progress: Progress, exercises: list[Exercise]
+    exercise: Exercise,
+    language: str,
+    progress: Progress,
+    exercises: list[Exercise],
+    files_open: bool = False,
 ) -> str:
-    lines = [header(exercise, language, progress, exercises), "", exercise.task, ""]
+    lines = [header(exercise, language, progress, exercises), ""]
+    if exercise.lesson_intro and not lesson_started(exercise, progress):
+        lines.extend([exercise.lesson_intro, ""])
+    lines.extend([exercise.task, ""])
     files = exercise.files.get(language, {})
     if files:
         lines.append(f"Read   lessons/{exercise.lesson}/README.md")
-        lines.append(f"Edit   lessons/{exercise.lesson}/{files.get('edit', '')}")
         lines.append(f"Tests  lessons/{exercise.lesson}/{files.get('tests', '')}")
+        lines.append(f"Edit   lessons/{exercise.lesson}/{files.get('edit', '')}")
         lines.append("")
+    lines.append(bold(next_action(exercise, language)))
+    if files_open:
+        lines.append(dim(FILES_OPEN))
+    lines.append("")
+    if not progress.done:
+        lines.extend([dim(HOW_THIS_WORKS), ""])
     if exercise.checklist:
         lines.append("Checklist:")
         lines.extend(f"  [ ] {item}" for item in exercise.checklist)
@@ -588,6 +648,8 @@ def report(exercise: Exercise, evaluation: Evaluation, seen_red: bool) -> str:
         )
     elif exercise.kind == "confirm" and evaluation.passed:
         lines.append(green("  Tests pass. Work through the checklist, then press d."))
+    elif exercise.kind == "read" and not evaluation.passed:
+        lines.append(dim("  These fail because there's no code yet. That's expected for now."))
     return "\n".join(lines)
 
 
@@ -748,15 +810,19 @@ def open_in_editor(path: Path) -> None:
 
 
 def lesson_files(exercise: Exercise, language: str) -> list[Path]:
-    """The lesson README, then the file the learner edits, if the lesson names one."""
+    """The file the learner edits, its tests, then the lesson README.
+
+    VS Code shows the last file it opens, and the README is where to start.
+    """
     lesson_dir = ROOT / "lessons" / exercise.lesson
-    edit = exercise.files.get(language, {}).get("edit")
-    return [lesson_dir / "README.md", *([lesson_dir / edit] if edit else [])]
+    files = exercise.files.get(language, {})
+    named = [lesson_dir / files[k] for k in ("edit", "tests") if files.get(k)]
+    return [*named, lesson_dir / "README.md"]
 
 
 def can_open_in_vscode() -> bool:
     """Inside VS Code's own terminal, where `code` opens files in the same window."""
-    if os.environ.get("GUIDE_NO_OPEN"):
+    if os.environ.get("GUIDE_NO_OPEN", "") not in ("", "0"):
         return False
     return os.environ.get("TERM_PROGRAM") == "vscode" and shutil.which("code") is not None
 
@@ -783,6 +849,7 @@ def watch(exercises: list[Exercise], progress: Progress, open_files: bool = True
     shown: str | None = None
     last = Run(False, "", "")
     opened: str | None = None
+    files_open = False
     keys = "h hint · e edit · r README · o full output · d done · q quit  (then Enter)"
     while True:
         step = current_step(exercises, progress)
@@ -795,15 +862,19 @@ def watch(exercises: list[Exercise], progress: Progress, open_files: bool = True
             if shown == step_key(*step):
                 latest = wait_until_quiet(exercise.lesson, language, latest)
             files, shown = latest, step_key(*step)
-            if open_files and opened != shown and can_open_in_vscode():
-                open_in_vscode(lesson_files(exercise, language))
-            opened = shown
+            if opened != shown:
+                files_open = (
+                    open_files
+                    and can_open_in_vscode()
+                    and open_in_vscode(lesson_files(exercise, language))
+                )
+                opened = shown
             clear_screen()
-            print(describe(exercise, language, progress, exercises))
+            print(describe(exercise, language, progress, exercises, files_open))
             print(dim("Running the tests..."))
             last = check_step(exercise, language, progress)
             clear_screen()
-            print(describe(exercise, language, progress, exercises))
+            print(describe(exercise, language, progress, exercises, files_open))
             print(last.text)
             if last.complete:
                 print("\n" + finished(exercise, current_step(exercises, progress)))
@@ -841,13 +912,14 @@ def show_hint(exercise: Exercise, language: str, progress: Progress) -> None:
 
 
 def confirm(exercise: Exercise, language: str, progress: Progress) -> None:
-    if exercise.kind != "confirm":
+    if exercise.kind not in ("confirm", "read"):
         print("This step finishes by itself when its tests pass.")
         return
-    results, _ = run_tests(exercise.lesson, language)
-    if not evaluate(exercise, results).passed:
-        print(red("Get the tests passing first, then confirm."))
-        return
+    if exercise.kind == "confirm":
+        results, _ = run_tests(exercise.lesson, language)
+        if not evaluate(exercise, results).passed:
+            print(red("Get the tests passing first, then confirm."))
+            return
     progress.done.add(step_key(exercise, language))
     progress.save(PROGRESS_FILE)
     print(finished(exercise, current_step(load_exercises(ROOT), progress)))

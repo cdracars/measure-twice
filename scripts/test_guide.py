@@ -277,6 +277,11 @@ class CompleteTest(unittest.TestCase):
         evaluation = guide.evaluate(confirm, list(self.passing))
         self.assertFalse(guide.is_complete(confirm, evaluation, False))
 
+    def test_a_read_exercise_is_never_complete_on_its_own(self):
+        read = exercise(kind="read", tests="all")
+        evaluation = guide.evaluate(read, list(self.passing))
+        self.assertFalse(guide.is_complete(read, evaluation, False))
+
 
 class HintTest(unittest.TestCase):
     def test_a_plain_hint_is_the_same_in_every_language(self):
@@ -401,9 +406,12 @@ class LessonFilesTest(unittest.TestCase):
         self.assertGreater(len(exercises), 0)
         for e in exercises:
             with self.subTest(exercise=e.key):
-                self.assertIn(e.kind, ("check", "tests-first", "confirm"))
+                self.assertIn(e.kind, ("check", "tests-first", "confirm", "read"))
                 self.assertTrue(e.title and e.task and e.lesson_title and e.learned)
-                if e.kind != "confirm":
+                self.assertTrue(e.lesson_intro, "a guided lesson says what it teaches and why")
+                if e.kind in ("confirm", "read"):
+                    self.assertTrue(e.checklist, "checklist steps have a checklist")
+                else:
                     self.assertEqual(3, len(e.hints), "check exercises get three hints")
                 for hint in e.hints:
                     for language in guide.LANGUAGES:
@@ -472,6 +480,7 @@ class ShowOnlyLanguagesTest(unittest.TestCase):
 
 
 PHP_FILES = {"php": {"edit": "php/filament.php", "tests": "php/test.php"}}
+LESSON_01 = "lessons/01-filament-math"
 IN_VSCODE = {"TERM_PROGRAM": "vscode"}
 
 
@@ -516,10 +525,13 @@ class OpenLessonFilesTest(unittest.TestCase):
     def code_calls(self) -> list[list[str]]:
         return [c.args[0] for c in self.code.call_args_list if c.args[0][0] == "code"]
 
-    def test_a_step_opens_the_lesson_readme_and_the_file_to_edit(self):
+    def test_a_step_opens_the_stub_and_tests_then_the_readme_so_the_readme_shows(self):
         self.watch([])
-        readme, stub = self.lesson_dir / "README.md", self.lesson_dir / "php/filament.php"
-        self.assertEqual([["code", "--reuse-window", str(readme), str(stub)]], self.code_calls())
+        stub, tests = self.lesson_dir / "php/filament.php", self.lesson_dir / "php/test.php"
+        readme = self.lesson_dir / "README.md"
+        self.assertEqual(
+            [["code", "--reuse-window", str(stub), str(tests), str(readme)]], self.code_calls()
+        )
 
     def test_saving_re_runs_the_tests_without_opening_the_files_again(self):
         self.assertEqual(3, self.watch([None, None], saves=3))
@@ -532,6 +544,10 @@ class OpenLessonFilesTest(unittest.TestCase):
     def test_guide_no_open_turns_it_off(self):
         self.watch([], env={**IN_VSCODE, "GUIDE_NO_OPEN": "1"})
         self.assertEqual([], self.code_calls())
+
+    def test_guide_no_open_set_to_0_leaves_it_on(self):
+        self.watch([], env={**IN_VSCODE, "GUIDE_NO_OPEN": "0"})
+        self.assertEqual(1, len(self.code_calls()))
 
     def test_the_no_open_flag_turns_it_off(self):
         with mock.patch.object(guide, "watch", return_value=0) as watch:
@@ -549,6 +565,21 @@ class OpenLessonFilesTest(unittest.TestCase):
             open_in_editor.call_args_list,
         )
 
+    def printed_by_watch(self, **kwargs) -> str:
+        with mock.patch("builtins.print") as printed:
+            self.watch([], **kwargs)
+        return "\n".join(str(c.args[0]) for c in printed.call_args_list if c.args)
+
+    def test_the_step_says_its_files_are_open_when_the_guide_opened_them(self):
+        self.assertIn(guide.FILES_OPEN, self.printed_by_watch())
+
+    def test_the_step_does_not_claim_files_are_open_outside_vscode(self):
+        self.assertNotIn(guide.FILES_OPEN, self.printed_by_watch(env={}))
+
+    def test_the_step_does_not_claim_files_are_open_when_code_fails(self):
+        self.code.return_value = subprocess.CompletedProcess([], 1)
+        self.assertNotIn(guide.FILES_OPEN, self.printed_by_watch())
+
     def test_a_code_command_that_fails_to_start_is_not_an_error(self):
         self.code.side_effect = OSError("no such file")
         self.assertFalse(guide.open_in_vscode([self.lesson_dir / "README.md"]))
@@ -557,6 +588,84 @@ class OpenLessonFilesTest(unittest.TestCase):
         self.assertEqual(
             [self.lesson_dir / "README.md"], guide.lesson_files(exercise(files={}), "php")
         )
+
+
+class NextActionTest(unittest.TestCase):
+    """Each step says what to do now; the very first one also says how the guide works."""
+
+    def describe(self, step: Exercise, done=()) -> str:
+        progress = Progress(languages=["php"], done=set(done))
+        return guide.describe(step, "php", progress, [step])
+
+    def test_a_check_step_says_which_file_to_change_and_that_saving_re_runs(self):
+        self.assertEqual(
+            f"Next: read the tests in {LESSON_01}/php/test.php, then write the code in"
+            f" {LESSON_01}/php/filament.php and save. The tests re-run here.",
+            guide.next_action(exercise(files=PHP_FILES), "php"),
+        )
+
+    def test_a_tests_first_step_says_to_write_the_tests_before_the_code(self):
+        action = guide.next_action(exercise(kind="tests-first", files=PHP_FILES), "php")
+        self.assertIn(f"write the tests in {LESSON_01}/php/test.php first", action)
+
+    def test_a_step_that_needs_more_tests_says_to_add_one(self):
+        action = guide.next_action(exercise(min_tests=7, files=PHP_FILES), "php")
+        self.assertIn(f"add your test to {LESSON_01}/php/test.php", action)
+
+    def test_a_read_step_says_to_open_the_tests_and_write_no_code(self):
+        action = guide.next_action(exercise(kind="read", files=PHP_FILES), "php")
+        self.assertIn(f"open {LESSON_01}/php/test.php", action)
+        self.assertIn("No code yet", action)
+
+    def test_files_named_from_the_repository_root_match_the_paths_listed_above(self):
+        text = self.describe(exercise(files=PHP_FILES))
+        self.assertIn(f"Tests  {LESSON_01}/php/test.php", text)
+        self.assertIn(f"read the tests in {LESSON_01}/php/test.php", text)
+
+    def test_the_open_files_note_shows_only_when_the_files_were_opened(self):
+        progress = Progress(languages=["php"])
+        step = exercise(files=PHP_FILES)
+        self.assertIn(guide.FILES_OPEN, guide.describe(step, "php", progress, [step], True))
+        self.assertNotIn(guide.FILES_OPEN, guide.describe(step, "php", progress, [step]))
+
+    def test_a_read_step_can_be_confirmed_while_the_tests_still_fail(self):
+        step, progress = exercise(kind="read", tests="all"), Progress(languages=["php"])
+        failing = ([TestResult("a", False)], "")
+        with (
+            tempfile.TemporaryDirectory() as temp,
+            mock.patch.object(guide, "PROGRESS_FILE", Path(temp) / "progress.json"),
+            mock.patch.object(guide, "run_tests", return_value=failing),
+            mock.patch.object(guide, "load_exercises", return_value=[step]),
+            mock.patch("builtins.print"),
+        ):
+            guide.confirm(step, "php", progress)
+        self.assertIn(guide.step_key(step, "php"), progress.done)
+
+    def test_a_checklist_step_says_to_press_d(self):
+        action = guide.next_action(exercise(kind="confirm", files=PHP_FILES), "php")
+        self.assertIn("Press d when it's done", action)
+
+    def test_every_step_shows_its_next_line(self):
+        self.assertIn("Next: read the tests", self.describe(exercise(files=PHP_FILES)))
+
+    def test_the_first_step_explains_how_the_guide_works(self):
+        self.assertIn("How this works", self.describe(exercise(files=PHP_FILES)))
+
+    def test_once_a_step_is_done_the_explanation_goes_away(self):
+        text = self.describe(exercise(files=PHP_FILES), done=["01.1:php"])
+        self.assertNotIn("How this works", text)
+
+    def test_a_lesson_opens_with_what_it_teaches(self):
+        step = exercise(files=PHP_FILES, lesson_intro="This lesson is about TDD.")
+        self.assertIn("This lesson is about TDD.", self.describe(step))
+
+    def test_the_lesson_intro_goes_away_once_a_step_of_that_lesson_is_done(self):
+        step = exercise(number=2, files=PHP_FILES, lesson_intro="This lesson is about TDD.")
+        self.assertNotIn("This lesson is about TDD.", self.describe(step, done=["01.1:php"]))
+
+    def test_another_lessons_progress_does_not_hide_the_intro(self):
+        step = exercise(files=PHP_FILES, lesson_intro="This lesson is about TDD.")
+        self.assertIn("This lesson is about TDD.", self.describe(step, done=["00.1:php"]))
 
 
 if __name__ == "__main__":

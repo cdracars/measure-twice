@@ -44,13 +44,26 @@ lesson.
 
 ### The quick way: nothing to install
 
+Open the course in a GitHub Codespace: VS Code in your browser with PHP 8.4,
+Python, Node.js, Rust, Composer and uv already set up.
+
+> [!NOTE]
+> **The first start is slow.** A new codespace installs four languages'
+> toolchains before it opens, which takes several minutes. The page may sit on
+> "Setting up your codespace" for a while: that's normal, so leave it running.
+> Reopening the same codespace later takes seconds.
+
 [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/cdracars/measure-twice)
 
-Click the badge to open the course in a GitHub Codespace: VS Code in your
-browser with PHP 8.4, Python, Node.js, Rust, Composer and uv already set up.
-The first start takes a few minutes while it builds; after that, open a
-terminal and run `./scripts/guide`. GitHub's free plan includes some Codespaces
-hours each month.
+Once it opens, the guide starts by itself in a terminal and asks which
+languages you'll work in. If you quit it, run `./scripts/guide` to start it
+again.
+
+The codespace runs on your own GitHub account, not the course's: GitHub's
+"paid for by" notice will show your username. It comes out of your account's
+free monthly Codespaces allowance, and with GitHub's default $0 spending limit
+it stops when that runs out rather than charging you. Stop or delete the
+codespace when you're done to make the allowance last.
 
 The same setup runs on your own machine with VS Code's Dev Containers
 extension and Docker: open the folder, then choose *Reopen in Container*. The
@@ -103,8 +116,8 @@ save a file it re-runs that step's tests and shows what failed: expected,
 got, and where. When the step passes, it moves you on.
 
 Keep it running in a terminal next to your editor; any editor works. In VS
-Code's terminal, including a Codespace, each new step opens the lesson README
-and the file you edit for you. Elsewhere, the guide prints their paths. To
+Code's terminal, including a Codespace, each new step opens the lesson README,
+the tests, and the file you edit for you. Elsewhere, the guide prints their paths. To
 stop it opening files, run `./scripts/guide --no-open` or set
 `GUIDE_NO_OPEN=1`. While it's running, type a letter and press Enter:
 

@@ -76,6 +76,7 @@ test('ABS needs an enclosure', function () {
     assert_same(true, needs_enclosure('ABS'));
 });
 
+// The tiny test runner reports the result. Nothing to change below this line.
 if ($failures > 0) {
     echo "\n{$failures} failed\n";
     exit(1);

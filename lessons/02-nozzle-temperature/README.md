@@ -2,6 +2,21 @@
 
 **Stage 1 · Basics + TDD rhythm** · Languages: PHP · Python · TypeScript · Rust
 
+## What you're learning
+
+Writing tests yourself, before the code, and choosing inputs that catch bugs.
+
+**The setup:** you swap roles. In lesson 01 a teammate wrote the tests and you
+made them pass. `nozzle_verdict` still comes with their tests, but
+`needs_enclosure` comes with just one, and you write the rest before its code.
+This back-and-forth, where one person writes a failing test and the other makes
+it pass, is called **ping-pong pairing**. You don't need a partner: here you
+play both sides.
+
+You also meet **boundary values**: the inputs at the very edge of a range,
+where bugs cluster. Both are how you check code you didn't write, including
+code an AI wrote.
+
 ## The problem
 
 Before Jig starts a print job, it should catch obvious mistakes, such as
@@ -62,13 +77,14 @@ When you write your own tests from now on, ask where the boundaries are.
 ## How to work through it
 
 Start with the language you know best, then do the ones you're learning, with
-your weakest last. For each language:
+your weakest last.
 
-1. **Red:** `./scripts/check 02 rust` (or `php`, `python`, `ts`)
-2. **Green:** make the `nozzle_verdict` tests pass.
-3. **Your tests:** write the `needs_enclosure` tests, see them fail, then make
-   them pass.
-4. **Refactor:** with everything green, make it clearer.
+The guide takes you through this one step at a time: make the
+`nozzle_verdict` tests pass, write the `needs_enclosure` tests and watch them
+fail, make them pass, then refactor. It re-runs the tests every time you save,
+and it only counts your `needs_enclosure` tests once it has seen them fail. In
+a codespace it's already running in the terminal; anywhere else, start it
+with `./scripts/guide`.
 
 | Language | Stub you edit | Tests |
 | --- | --- | --- |
@@ -76,6 +92,19 @@ your weakest last. For each language:
 | Python | `python/temperature.py` | `python/test_temperature.py` |
 | TypeScript | `ts/temperature.ts` | `ts/temperature.test.ts` |
 | Rust | `rust/src/lib.rs` | `rust/tests/temperature.rs` |
+
+<details>
+<summary>Working without the guide</summary>
+
+The same steps by hand, for each language:
+
+1. **Red:** `./scripts/check 02 rust` (or `php`, `python`, `ts`)
+2. **Green:** make the `nozzle_verdict` tests pass.
+3. **Your tests:** write the `needs_enclosure` tests, see them fail, then make
+   them pass.
+4. **Refactor:** with everything green, make it clearer.
+
+</details>
 
 ## What's different between the languages
 
@@ -102,7 +131,8 @@ Then answer in your own words:
 
 ## Done when
 
-- [ ] `./scripts/check 02` passes in all four languages
+- [ ] The guide has taken you through lesson 02 in every language you chose
+  (without the guide: `./scripts/check 02` passes in each of them)
 - [ ] You wrote the `needs_enclosure` tests before its code, in each language
 - [ ] You can explain why the tests use 189, 190, 220 and 221 rather than 205
 

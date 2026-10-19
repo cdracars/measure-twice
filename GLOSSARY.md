@@ -61,6 +61,11 @@ the first idea of domain modeling. Add terms as lessons introduce them.
 : An input at or just past the edge of a range, such as 190 and 189 for a
   range starting at 190. Bugs cluster there, so tests should too.
 
+**Ping-pong pairing**
+: Two people sharing one task: one writes a failing test, the other writes the
+  code that makes it pass, then they swap. Lessons 01 and 02 use it as a
+  setup; you don't need a partner.
+
 **Red, green, refactor**
 : The TDD loop. Red: a failing test. Green: the simplest code that passes.
   Refactor: improve the code while the tests stay green.
