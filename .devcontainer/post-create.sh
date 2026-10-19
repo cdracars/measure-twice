@@ -13,23 +13,17 @@ npm ci --no-audit --no-fund
 echo "Building the Rust lessons once, so the first test run is fast..."
 cargo test --workspace --no-run --quiet
 
-# In a codespace, the first terminal of each session starts the guide, so a
-# learner lands on step 1 without typing anything. Later terminals are plain
-# shells. boot_id changes whenever the codespace restarts.
-if ! grep -q 'measure-twice-guide' ~/.bashrc 2>/dev/null; then
-  cat >> ~/.bashrc <<'BASHRC'
-
-# measure-twice-guide: start the guide in the first terminal of a codespace.
-if [ -n "${CODESPACES:-}" ] && [[ $- == *i* ]] && [ -f lessons/01-filament-math/guide.toml ]; then
-  _guide_marker="/tmp/measure-twice-guide-$(cat /proc/sys/kernel/random/boot_id 2>/dev/null)"
-  if [ ! -e "$_guide_marker" ]; then
-    touch "$_guide_marker"
-    ./scripts/guide
-  fi
-  unset _guide_marker
-fi
-BASHRC
-fi
+# The guide panel: a small VS Code extension in extensions/guide-panel that shows
+# the guide's current step in the sidebar (ADR 0006). It isn't on the
+# marketplace, so copy it straight into the folders VS Code loads extensions
+# from: ~/.vscode-remote in Codespaces, ~/.vscode-server in local dev containers.
+echo "Installing the guide panel..."
+panel_id="$(node -p "const p = require('./extensions/guide-panel/package.json'); p.publisher + '.' + p.name + '-' + p.version")"
+for dir in ~/.vscode-remote/extensions ~/.vscode-server/extensions; do
+  mkdir -p "$dir"
+  rm -rf "${dir:?}/$panel_id"
+  cp -r extensions/guide-panel "$dir/$panel_id"
+done
 
 # The first terminal in Codespaces and VS Code shows this notice.
 notice=/usr/local/etc/vscode-dev-containers/first-run-notice.txt
@@ -38,8 +32,9 @@ if sudo -n true 2>/dev/null; then
   sudo tee "$notice" > /dev/null <<'TEXT'
 Welcome to Measure Twice. Everything is installed.
 
-The guide starts by itself in this terminal.
-Quit it? Start it again: ./scripts/guide
+The Measure Twice panel in the sidebar takes you through each step.
+The guide behind it runs in the "Measure Twice guide" terminal.
+Prefer the terminal? Run: ./scripts/guide
 Or read the course:      README.md
 
 TEXT

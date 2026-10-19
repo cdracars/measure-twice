@@ -83,8 +83,9 @@ The guide takes you through this one step at a time: make the
 `nozzle_verdict` tests pass, write the `needs_enclosure` tests and watch them
 fail, make them pass, then refactor. It re-runs the tests every time you save,
 and it only counts your `needs_enclosure` tests once it has seen them fail. In
-a codespace it's already running in the terminal; anywhere else, start it
-with `./scripts/guide`.
+a codespace, the Measure Twice panel in the sidebar takes you through it, with
+the guide running in a terminal behind it; anywhere else, start it with
+`./scripts/guide`.
 
 | Language | Stub you edit | Tests |
 | --- | --- | --- |

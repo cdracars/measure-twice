@@ -55,9 +55,14 @@ Python, Node.js, Rust, Composer and uv already set up.
 
 [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/cdracars/measure-twice)
 
-Once it opens, the guide starts by itself in a terminal and asks which
-languages you'll work in. If you quit it, run `./scripts/guide` to start it
-again.
+VS Code may first ask **"Do you trust the authors of the files in this
+folder?"** Choose **Trust Folder & Continue**: the guide runs each lesson's
+tests, and VS Code keeps terminals switched off until you do.
+
+Once it opens, the **Measure Twice** panel in the sidebar asks which
+languages you'll work in, then takes you through each step: what to do, which
+tests pass, and buttons for hints and for opening the files. The guide runs in
+a terminal behind it, re-running your tests every time you save.
 
 The codespace runs on your own GitHub account, not the course's: GitHub's
 "paid for by" notice will show your username. It comes out of your account's
@@ -101,12 +106,22 @@ On Windows, use WSL or Git Bash: `scripts/check` is a bash script.
 
 ## Start with the guide
 
-The easiest way in is the guide, a small terminal program that walks you
-through the lessons one step at a time:
+The easiest way in is the guide, a small program that walks you through the
+lessons one step at a time.
+
+In a codespace, or the dev container on your own machine, you use it through
+the **Measure Twice** panel in VS Code's sidebar. The panel shows your step,
+which tests pass and fail, and buttons for hints, for confirming a checklist,
+for the full test output, and for opening the lesson's files. The guide itself
+runs in the "Measure Twice guide" terminal behind it; leave that terminal open.
+
+Anywhere else, run the guide in a terminal:
 
 ```sh
 ./scripts/guide
 ```
+
+The rest of this section is about that terminal version.
 
 The first time, it asks which languages you'll use (strongest first) and
 checks they're installed. In VS Code, the Explorer then shows only those
@@ -214,6 +229,7 @@ ask for it explicitly, and then write it again yourself without looking.
 lessons/NN-name/     one lesson: README.md plus php/ python/ ts/ rust/
 scripts/check        test runner
 scripts/guide        the guided way through the lessons (lessons/*/guide.toml)
+extensions/          the guide panel for VS Code, installed by the dev container
 CURRICULUM.md        the stages and what each lesson covers
 GLOSSARY.md          workshop and course vocabulary
 docs/adr/            decisions about how this course is built, and why
