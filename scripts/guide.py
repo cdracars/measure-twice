@@ -752,6 +752,11 @@ def panel_state(
                 for r in run.evaluation.selected
                 if not r.passed
             ],
+            # Every test in the step, in a stable order, so a fixed one turns green in place.
+            "tests": [
+                {"name": readable(r.name), "passed": r.passed, "message": r.message}
+                for r in run.evaluation.selected
+            ],
             "notice": notice,
             "tone": tone,
         }

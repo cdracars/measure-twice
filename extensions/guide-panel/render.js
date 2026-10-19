@@ -48,18 +48,22 @@ function results(state) {
     return `<p class="muted">Running the tests…</p>`;
   }
   const parts = [];
-  if (r.ran && r.passing) {
-    parts.push(`<p class="good">✓ ${r.passing} passing</p>`);
-  }
-  if (r.failing.length) {
+  // Every test in the step, always in the same order: a fixed test turns
+  // green where it was instead of dropping out of the list.
+  const tests = r.tests || [];
+  if (tests.length) {
+    const passing = tests.filter((t) => t.passed).length;
+    const allPass = passing === tests.length;
+    parts.push(`<p${allPass ? ' class="good"' : ""}>${passing} of ${tests.length} passing</p>`);
     parts.push(
-      "<ul class=\"failures\">" +
-        r.failing
-          .map(
-            (f) =>
-              `<li><span class="bad">✗</span> ${escape(f.name)}` +
-              (f.message ? `<div class="message">${escape(f.message)}</div>` : "") +
-              "</li>",
+      "<ul class=\"tests\">" +
+        tests
+          .map((t) =>
+            t.passed
+              ? `<li><span class="good">✓</span> ${escape(t.name)}</li>`
+              : `<li><span class="bad">✗</span> ${escape(t.name)}` +
+                (t.message ? `<div class="message">${escape(t.message)}</div>` : "") +
+                "</li>",
           )
           .join("") +
         "</ul>",

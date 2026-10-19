@@ -36,6 +36,9 @@ function state(overrides = {}) {
       ran: true,
       passing: 0,
       failing: [{ name: "one metre weighs about 3 g", message: "TODO: implement filament_grams" }],
+      tests: [
+        { name: "one metre weighs about 3 g", passed: false, message: "TODO: implement filament_grams" },
+      ],
       notice: "These fail because there's no code yet.",
       tone: "quiet",
     },
@@ -123,6 +126,32 @@ test("failures show their name and message", () => {
   assert.match(html, /one metre weighs about 3 g/);
   assert.match(html, /TODO: implement filament_grams/);
   assert.match(html, /class="quiet">These fail because there's no code yet\./);
+});
+
+test("every test in the step is listed, passing ones too, in the guide's order", () => {
+  const tests = [
+    { name: "one metre weighs about 3 g", passed: true, message: "" },
+    { name: "zero length weighs nothing", passed: false, message: "expected 0, got 2.5" },
+    { name: "much heavier", passed: true, message: "" },
+  ];
+  const html = render(state({ results: { ran: true, tests, notice: "", tone: "quiet" } }));
+  assert.match(html, /2 of 3 passing/);
+  const names = [...html.matchAll(/<li><span class="(good|bad)">[✓✗]<\/span> ([^<]+)/g)];
+  assert.deepEqual(
+    names.map((m) => [m[1], m[2]]),
+    [
+      ["good", "one metre weighs about 3 g"],
+      ["bad", "zero length weighs nothing"],
+      ["good", "much heavier"],
+    ],
+  );
+  assert.match(html, /expected 0, got 2\.5/);
+});
+
+test("when every test passes, the count says so in green", () => {
+  const tests = [{ name: "a", passed: true, message: "" }];
+  const html = render(state({ results: { ran: true, tests, notice: "", tone: "quiet" } }));
+  assert.match(html, /<p class="good">1 of 1 passing<\/p>/);
 });
 
 test("while the tests run, it says so instead of showing old results", () => {
