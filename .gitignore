@@ -8,3 +8,5 @@ vendor/
 .phpunit.result.cache
 .phpunit.cache/
 .guide-progress.json
+.guide-state.json
+.guide-state.tmp

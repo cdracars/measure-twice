@@ -4,7 +4,9 @@ Date: 2026-10-16
 
 ## Status
 
-Accepted
+Accepted. [ADR 0006](0006-a-guide-panel-in-vs-code.md) adds the guide panel,
+installed by `post-create.sh`, and replaces the first-terminal hook that
+started the guide.
 
 ## Context
 

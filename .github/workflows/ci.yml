@@ -35,6 +35,8 @@ jobs:
         run: python -m unittest discover -s scripts
       - name: Guide steps find their tests
         run: ./scripts/guide verify --structure
+      - name: Guide panel tests
+        run: node --test "extensions/guide-panel/test/*.test.js"
 
   # main holds the unsolved exercises, so its tests fail on purpose.
   # Everywhere else (the solutions branch, your own branches, pull requests)

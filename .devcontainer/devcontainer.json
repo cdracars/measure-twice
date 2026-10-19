@@ -28,13 +28,32 @@
       "settings": {
         "workbench.editorAssociations": {
           "**/lessons/*/README.md": "vscode.markdown.preview.editor"
+        },
+        "files.exclude": {
+          "**/node_modules": true,
+          "**/target": true,
+          "**/__pycache__": true,
+          ".ruff_cache": true,
+          ".devcontainer": true,
+          ".github": true,
+          ".gitattributes": true,
+          ".guide-progress.json": true,
+          ".guide-state.json": true,
+          "extensions": true,
+          "CLAUDE.md": true,
+          "Cargo.toml": true,
+          "Cargo.lock": true,
+          "package.json": true,
+          "package-lock.json": true,
+          "pyproject.toml": true,
+          "tsconfig.json": true
         }
       },
       "extensions": [
         "rust-lang.rust-analyzer",
         "ms-python.python",
-        "charliermarsh.ruff",
-        "bmewburn.vscode-intelephense-client"
+        "bmewburn.vscode-intelephense-client",
+        "-vadimcn.vscode-lldb"
       ]
     }
   }
