@@ -108,7 +108,7 @@ session's end, before those merges.
 Go as a fifth language, and dev containers that install only the learner's
 languages, were discussed in this session. On 2026-10-19 Cody parked both as
 too experimental: the aim for now is a stable guide and onboarding. They're
-kept out of the repo, including CURRICULUM.md, until he decides otherwise.
+listed in `docs/ideas.md`, not in CURRICULUM.md.
 
 ### Possible next steps
 
