@@ -8,5 +8,6 @@ vendor/
 .phpunit.result.cache
 .phpunit.cache/
 .guide-progress.json
+.vscode/settings.json
 .guide-state.json
 .guide-state.tmp

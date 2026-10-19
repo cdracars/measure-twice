@@ -235,6 +235,18 @@ class EvaluateTest(unittest.TestCase):
         evaluation = guide.evaluate(exercise(tests=("nothing like this",)), RESULTS)
         self.assertFalse(evaluation.passed)
 
+    def test_selected_tests_follow_the_steps_phrases_then_names(self):
+        results = [
+            TestResult("zero length b", True),
+            TestResult("one metre weighs about 3 g", True),
+            TestResult("zero length a", True),
+        ]
+        selected = guide.evaluate(exercise(), results).selected
+        self.assertEqual(
+            ["one metre weighs about 3 g", "zero length a", "zero length b"],
+            [r.name for r in selected],
+        )
+
     def test_too_few_tests_is_not_enough(self):
         evaluation = guide.evaluate(exercise(tests=("enclosure",), min_tests=3), RESULTS)
         self.assertFalse(evaluation.enough)
@@ -292,10 +304,31 @@ class ScreenTest(unittest.TestCase):
         failure = TestResult(
             "test_zero_length_weighs_nothing", False, "expected 0, got 2.5", "t.py:12"
         )
-        text = guide.describe_failure(failure)
+        text = guide.describe_result(failure)
         self.assertIn("zero length weighs nothing", text)
         self.assertIn("expected 0, got 2.5", text)
         self.assertIn("t.py:12", text)
+
+    def test_a_passing_test_is_one_line(self):
+        passing = TestResult("test_zero_length_weighs_nothing", True, "", "t.py:12")
+        self.assertEqual(1, len(guide.describe_result(passing).splitlines()))
+        self.assertIn("zero length weighs nothing", guide.describe_result(passing))
+
+    def test_the_report_counts_and_lists_every_test_in_the_step(self):
+        evaluation = guide.evaluate(exercise(), [*RESULTS, TestResult("zero length", False)])
+        lines = guide.report(exercise(), evaluation, seen_red=False).splitlines()
+        self.assertIn("2 of 3 passing", lines[0])
+        self.assertIn("✓ one metre of PLA weighs about 3 g", lines[1])
+        self.assertIn("✗ zero length", lines[2])
+        self.assertIn("✓ zero length weighs nothing", lines[3])
+
+    def test_a_test_stays_in_its_place_when_it_goes_green(self):
+        def names(results):
+            return [r.name for r in guide.evaluate(exercise(), results).selected]
+
+        red = [TestResult("zero length weighs nothing", False), *RESULTS[:1]]
+        green = [*RESULTS[:1], TestResult("zero length weighs nothing", True)]
+        self.assertEqual(names(red), names(green))
 
     def test_paths_are_shown_relative_to_the_repository(self):
         self.assertEqual(
@@ -383,6 +416,67 @@ class LessonFilesTest(unittest.TestCase):
                 for hint in e.hints:
                     for language in guide.LANGUAGES:
                         self.assertTrue(guide.hint_text(hint, language))
+
+
+class ShowOnlyLanguagesTest(unittest.TestCase):
+    """Hiding the lesson folders of languages not chosen, in .vscode/settings.json."""
+
+    def setUp(self):
+        temp = tempfile.TemporaryDirectory()
+        self.addCleanup(temp.cleanup)
+        self.path = Path(temp.name) / ".vscode" / "settings.json"
+
+    def excludes(self) -> dict:
+        return json.loads(self.path.read_text(encoding="utf-8")).get("files.exclude", {})
+
+    def test_the_languages_not_chosen_are_hidden(self):
+        message = guide.show_only_languages(self.path, ["php", "python"])
+        self.assertEqual({"lessons/*/ts": True, "lessons/*/rust": True}, self.excludes())
+        self.assertIn("PHP and Python", message or "")
+
+    def test_choosing_a_language_again_shows_it(self):
+        guide.show_only_languages(self.path, ["php"])
+        guide.show_only_languages(self.path, ["php", "rust"])
+        self.assertEqual({"lessons/*/python": True, "lessons/*/ts": True}, self.excludes())
+
+    def test_other_settings_and_the_learners_own_choices_stay(self):
+        self.path.parent.mkdir()
+        self.path.write_text(
+            json.dumps({"editor.tabSize": 2, "files.exclude": {"lessons/*/ts": False, "x": True}}),
+            encoding="utf-8",
+        )
+        guide.show_only_languages(self.path, ["php"])
+        settings = json.loads(self.path.read_text(encoding="utf-8"))
+        self.assertEqual(2, settings["editor.tabSize"])
+        self.assertEqual(
+            {"lessons/*/ts": False, "x": True, "lessons/*/python": True, "lessons/*/rust": True},
+            settings["files.exclude"],
+        )
+
+    def test_three_languages_read_as_a_list(self):
+        message = guide.show_only_languages(self.path, ["php", "python", "rust"])
+        self.assertIn("PHP, Python and Rust", message or "")
+
+    def test_choosing_all_four_later_shows_everything(self):
+        guide.show_only_languages(self.path, ["php"])
+        message = guide.show_only_languages(self.path, list(guide.LANGUAGES))
+        self.assertEqual({}, self.excludes())
+        self.assertIn("every language", message or "")
+
+    def test_all_four_languages_need_no_settings_file(self):
+        self.assertIsNone(guide.show_only_languages(self.path, list(guide.LANGUAGES)))
+        self.assertFalse(self.path.exists())
+
+    def test_nothing_changed_says_nothing(self):
+        guide.show_only_languages(self.path, ["php"])
+        self.assertIsNone(guide.show_only_languages(self.path, ["php"]))
+
+    def test_a_settings_file_with_comments_is_left_alone(self):
+        self.path.parent.mkdir()
+        self.path.write_text('{\n  // mine\n  "editor.tabSize": 2\n}\n', encoding="utf-8")
+        message = guide.show_only_languages(self.path, ["php"])
+        self.assertIn("stay visible", message or "")
+        self.assertIn("// mine", self.path.read_text(encoding="utf-8"))
 
 
 PHP_FILES = {"php": {"edit": "php/filament.php", "tests": "php/test.php"}}

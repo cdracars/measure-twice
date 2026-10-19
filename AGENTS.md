@@ -24,7 +24,9 @@ through it, and the point is that **they** write the exercise code.
 
 ## When working on the course itself
 
-- Read `CURRICULUM.md`, `GLOSSARY.md`, and `docs/adr/` first.
+- Read `CURRICULUM.md`, `GLOSSARY.md`, and `docs/adr/` first. `docs/notes/`
+  has dated notes from past sessions; check them against the repo before
+  treating anything in them as current.
 - Stage 1 lessons use built-in tools only (ADR 0001). Stage 2 on uses the
   tools listed in ADR 0003; check their current versions when writing a
   lesson.
