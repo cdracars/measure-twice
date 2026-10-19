@@ -106,12 +106,22 @@ On Windows, use WSL or Git Bash: `scripts/check` is a bash script.
 
 ## Start with the guide
 
-The easiest way in is the guide, a small terminal program that walks you
-through the lessons one step at a time:
+The easiest way in is the guide, a small program that walks you through the
+lessons one step at a time.
+
+In a codespace, or the dev container on your own machine, you use it through
+the **Measure Twice** panel in VS Code's sidebar. The panel shows your step,
+which tests pass and fail, and buttons for hints, for confirming a checklist,
+for the full test output, and for opening the lesson's files. The guide itself
+runs in the "Measure Twice guide" terminal behind it; leave that terminal open.
+
+Anywhere else, run the guide in a terminal:
 
 ```sh
 ./scripts/guide
 ```
+
+The rest of this section is about that terminal version.
 
 The first time, it asks which languages you'll use (strongest first) and
 checks they're installed. Then it shows your current step, and every time you
@@ -217,6 +227,7 @@ ask for it explicitly, and then write it again yourself without looking.
 lessons/NN-name/     one lesson: README.md plus php/ python/ ts/ rust/
 scripts/check        test runner
 scripts/guide        the guided way through the lessons (lessons/*/guide.toml)
+extensions/          the guide panel for VS Code, installed by the dev container
 CURRICULUM.md        the stages and what each lesson covers
 GLOSSARY.md          workshop and course vocabulary
 docs/adr/            decisions about how this course is built, and why

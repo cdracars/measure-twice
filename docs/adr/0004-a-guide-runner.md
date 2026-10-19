@@ -4,7 +4,8 @@ Date: 2026-10-16
 
 ## Status
 
-Accepted
+Accepted. Extended by [ADR 0006](0006-a-guide-panel-in-vs-code.md): in VS
+Code, a sidebar panel shows what the guide writes to `.guide-state.json`.
 
 ## Context
 
