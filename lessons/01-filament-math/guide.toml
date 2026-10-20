@@ -42,8 +42,9 @@ checklist = [
 title = "Weight from a length"
 task = """
 Make the filament_grams tests pass. They say what it must do: give the weight in
-grams of a length of filament. The lesson README has the formula. Only the tests
-for this function count here.
+grams of a length of filament. The lesson README has the formula. Your language
+has π built in, so look it up rather than typing 3.14159. Only the tests for
+this function count here.
 """
 tests = ["weighs about 3 g", "zero length", "much heavier", "denser material"]
 learned = "turning a formula into code, and red → green"
