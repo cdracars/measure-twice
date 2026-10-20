@@ -14,6 +14,18 @@ const { render, LANGUAGES } = require("./render");
 const TERMINAL_NAME = "Measure Twice guide";
 const LANGUAGE_IDS = LANGUAGES.map(([id]) => id);
 
+function readText(file) {
+  try {
+    return fs.readFileSync(file, "utf8");
+  } catch {
+    return "";
+  }
+}
+
+function shellQuote(text) {
+  return `'${String(text).replace(/'/g, "'\\''")}'`;
+}
+
 function readState(statePath) {
   try {
     return JSON.parse(fs.readFileSync(statePath, "utf8"));
@@ -57,11 +69,43 @@ async function findGuideTerminal(state) {
   return undefined;
 }
 
+// The terminal the panel started the guide in before, still open after the
+// guide quit or the window reloaded. Starting again reuses it, so the learner
+// doesn't collect a new terminal on every start.
+function namedGuideTerminal() {
+  return vscode.window.terminals.find((terminal) => terminal.name === TERMINAL_NAME);
+}
+
+// Restored terminals open without their names, which arrive a moment later,
+// so poll for the name instead of listening for new terminals.
+async function guideTerminalRestored(timeout) {
+  for (let waited = 0; waited < timeout && !namedGuideTerminal(); waited += 250) {
+    await new Promise((resolve) => setTimeout(resolve, 250));
+  }
+}
+
 class GuidePanel {
   constructor(root) {
     this.root = root;
     this.statePath = path.join(root, ".guide-state.json");
     this.view = undefined;
+    this.starting = undefined;
+  }
+
+  // Starts the guide and says so in the panel until the guide writes its first
+  // state. `reveal` also brings its terminal to the front: for a click, not
+  // for the automatic start when the course opens.
+  async start(languages, { reveal = false } = {}) {
+    if (!(await startGuide(this.root, languages, { reveal }))) return;
+    clearTimeout(this.starting && this.starting.timer);
+    // If the guide never writes anything (its command was lost, say), offer
+    // Start again rather than waiting forever.
+    const timer = setTimeout(() => {
+      this.starting = undefined;
+      this.refresh();
+    }, 30000);
+    this.starting = { from: readText(this.statePath), timer };
+    this.refresh();
   }
 
   state() {
@@ -81,10 +125,15 @@ class GuidePanel {
   }
 
   refresh() {
+    if (this.starting && readText(this.statePath) !== this.starting.from) {
+      clearTimeout(this.starting.timer);
+      this.starting = undefined;
+    }
     if (this.view) {
       const html = render(this.state(), {
         trusted: vscode.workspace.isTrusted,
         needsLanguages: !languagesChosen(this.root),
+        starting: Boolean(this.starting),
       });
       this.view.webview.postMessage({ type: "render", html });
     }
@@ -95,19 +144,22 @@ class GuidePanel {
       await vscode.commands.executeCommand("workbench.trust.manage");
     } else if (action === "choose") {
       const languages = validLanguages(value);
-      if (languages) await startGuide(this.root, languages);
+      if (languages) await this.start(languages, { reveal: true });
     } else if (action === "open") {
       await vscode.commands.executeCommand("vscode.open", vscode.Uri.file(path.join(this.root, value)));
     } else if (action === "start") {
-      await startGuide(this.root);
+      await this.start(undefined, { reveal: true });
     } else if (action === "terminal" || action === "key") {
-      const terminal = await findGuideTerminal(this.state());
+      // Keys only go to a running guide; "show the terminal" also works while
+      // it's still starting.
+      const terminal =
+        (await findGuideTerminal(this.state())) || (action === "terminal" ? namedGuideTerminal() : undefined);
       if (!terminal) {
         const choice = await vscode.window.showWarningMessage(
           "The panel can't find the terminal the guide is running in.",
           "Start the guide",
         );
-        if (choice) await startGuide(this.root);
+        if (choice) await this.start(undefined, { reveal: true });
         return;
       }
       if (action === "key") terminal.sendText(value, true);
@@ -136,6 +188,7 @@ class GuidePanel {
   .bar { height: 4px; background: var(--vscode-editorWidget-border, rgba(128,128,128,0.3)); border-radius: 2px; }
   .bar div { height: 100%; background: var(--vscode-progressBar-background); border-radius: 2px; }
   .intro { border-left: 3px solid var(--vscode-textLink-foreground); padding: 2px 10px; margin: 0.8em 0; background: var(--vscode-textBlockQuote-background); }
+  .done { padding: 4px 10px; margin: 0.6em 0; border-left: 3px solid var(--vscode-testing-iconPassed); background: var(--vscode-textBlockQuote-background); }
   .next { font-weight: 600; padding: 8px 10px; border-radius: 4px; background: var(--vscode-textBlockQuote-background); }
   .row { display: flex; flex-wrap: wrap; gap: 6px; margin: 0.6em 0; }
   button { font: inherit; color: var(--vscode-button-foreground); background: var(--vscode-button-background); border: none; border-radius: 3px; padding: 4px 10px; cursor: pointer; }
@@ -220,36 +273,45 @@ class GuidePanel {
   }
 }
 
-// Starts the guide in a terminal that stays in the background: the panel is
-// what the learner looks at. GUIDE_PANEL=1 tells the guide to keep its own
-// screen brief. With `languages`, it first saves them (./scripts/guide start).
-async function startGuide(root, languages) {
+// Starts the guide in a terminal that stays in the background unless `reveal`:
+// the panel is what the learner looks at. GUIDE_PANEL=1 tells the guide to keep
+// its own screen brief. With `languages`, it first saves them
+// (./scripts/guide start). Returns whether it sent the command.
+async function startGuide(root, languages, { reveal = false } = {}) {
   if (!languages && !languagesChosen(root)) {
     // Nothing to start yet: the panel shows the language picker.
     vscode.commands.executeCommand("workbench.view.extension.measureTwice");
-    return;
+    return false;
   }
   const state = readState(path.join(root, ".guide-state.json"));
   const running = await findGuideTerminal(state);
   if (running) {
     if (!languages) running.show();
-    return;
+    return false;
   }
   // A guide we can't find a terminal for (another window, say) still counts:
   // the guide itself refuses to run twice, so don't start a second one.
   if (state && !["stopped", "all-done"].includes(state.status) && guideIsAlive(state)) {
     vscode.window.showInformationMessage("The guide is already running in another terminal.");
-    return;
+    return false;
   }
-  const terminal = vscode.window.createTerminal({
-    name: TERMINAL_NAME,
-    cwd: root,
-    env: { GUIDE_PANEL: "1" },
-  });
-  const command = languages
+  let command = languages
     ? `./scripts/guide start ${languages.join(" ")} && ./scripts/guide`
     : "./scripts/guide";
+  let terminal = namedGuideTerminal();
+  if (terminal) {
+    // The learner may have moved this terminal away from the course folder.
+    command = `cd ${shellQuote(root)} && ${command}`;
+  } else {
+    terminal = vscode.window.createTerminal({
+      name: TERMINAL_NAME,
+      cwd: root,
+      env: { GUIDE_PANEL: "1" },
+    });
+  }
   terminal.sendText(command, true);
+  if (reveal) terminal.show(true);
+  return true;
 }
 
 function activate(context) {
@@ -264,7 +326,7 @@ function activate(context) {
     vscode.window.registerWebviewViewProvider("measureTwice.guide", panel, {
       webviewOptions: { retainContextWhenHidden: true },
     }),
-    vscode.commands.registerCommand("measureTwice.startGuide", () => startGuide(root)),
+    vscode.commands.registerCommand("measureTwice.startGuide", () => panel.start(undefined, { reveal: true })),
     vscode.window.onDidCloseTerminal(() => panel.refresh()),
     vscode.workspace.onDidGrantWorkspaceTrust(() => panel.refresh()),
   );
@@ -287,9 +349,14 @@ function activate(context) {
   // typing anything. In Restricted Mode terminals are blocked, so wait for trust.
   // Only on opening: if the learner quits the guide later, the panel offers a
   // Start button instead of restarting it behind their back.
-  const autoStart = () => {
+  const autoStart = async () => {
     const state = panel.state();
-    if (!state || state.status === "stopped") startGuide(root);
+    if (state && state.status !== "stopped") return;
+    // The guide has run here before, so this may be a reload: VS Code brings
+    // the old terminals back a few seconds after the panel starts. Wait for
+    // the guide's, so starting reuses it instead of opening another.
+    if (state) await guideTerminalRestored(8000);
+    panel.start();
   };
   if (vscode.workspace.isTrusted) {
     autoStart();

@@ -86,6 +86,18 @@ test("a stopped guide offers to start it", () => {
   assert.match(html, /data-action="start"/);
 });
 
+test("right after Start it says the guide is starting, with no second Start button", () => {
+  for (const html of [
+    render({ version: 1, status: "stopped" }, { starting: true }),
+    render(null, { starting: true, needsLanguages: true }),
+    render({ version: 1, status: "starting", pids: [1] }),
+  ]) {
+    assert.match(html, /Starting the guide/);
+    assert.match(html, /data-action="terminal"/);
+    assert.doesNotMatch(html, /data-action="start"/);
+  }
+});
+
 test("no state file at all also offers to start the guide", () => {
   assert.match(render(null), /data-action="start"/);
 });
@@ -114,6 +126,23 @@ test("a read step has its checklist and a done button that types d", () => {
   const html = render(state());
   assert.match(html, /data-check="1"/);
   assert.match(html, /data-action="key" data-value="d"/);
+});
+
+test("a finished step shows a green check and a Next button that types n", () => {
+  const html = render(state({ step: { ...state().step, kind: "check", done: true } }));
+  assert.match(html, /This step is done/);
+  assert.match(html, /data-action="key" data-value="n"/);
+  assert.doesNotMatch(render(state()), /data-value="n"/);
+});
+
+test("a finished read step drops its done button", () => {
+  const html = render(state({ step: { ...state().step, done: true } }));
+  assert.doesNotMatch(html, /data-value="d"/);
+});
+
+test("every step but the first can go back", () => {
+  assert.match(render(state()), /data-action="key" data-value="b"/);
+  assert.doesNotMatch(render(state({ step: { ...state().step, first: true } })), /data-value="b"/);
 });
 
 test("a check step has no done button", () => {

@@ -126,9 +126,24 @@ function problems(state) {
   );
 }
 
-function render(state, { trusted = true, needsLanguages = false } = {}) {
+// From a click on Start until the guide's first step is on screen. The shell
+// starting and the toolchain check take a few seconds, and without this the
+// panel looks as if nothing happened.
+function startingUp() {
+  return (
+    `<h2>Starting the guide…</h2>` +
+    `<p>It runs in the "Measure Twice guide" terminal. The first step shows ` +
+    `here in a moment.</p>` +
+    button("Show the guide's terminal", "terminal")
+  );
+}
+
+function render(state, { trusted = true, needsLanguages = false, starting = false } = {}) {
   if (!trusted) {
     return untrusted();
+  }
+  if (starting || (state && state.status === "starting")) {
+    return startingUp();
   }
   if (state && state.status === "problems") {
     return problems(state);
@@ -160,6 +175,14 @@ function render(state, { trusted = true, needsLanguages = false } = {}) {
       `<div style="width:${percent}%"></div></div>`,
     `<h2>Step ${step.number} of ${step.of}: ${escape(step.title)}</h2>`,
   );
+  // The guide stays on a finished step until the learner moves on, so they can
+  // read what passed first.
+  if (step.done) {
+    out.push(
+      `<div class="done"><p class="good"><b>✓ This step is done.</b></p>` +
+        `<div class="row">${button("Next step →", "key", "n")}</div></div>`,
+    );
+  }
   if (step.intro) {
     out.push(`<div class="intro">${paragraphs(step.intro)}</div>`);
   }
@@ -180,7 +203,7 @@ function render(state, { trusted = true, needsLanguages = false } = {}) {
         "</ul>",
     );
   }
-  if (step.kind === "read" || step.kind === "confirm") {
+  if ((step.kind === "read" || step.kind === "confirm") && !step.done) {
     out.push(`<div class="row">${button("Done with this step", "key", "d")}</div>`);
   }
 
@@ -203,7 +226,8 @@ function render(state, { trusted = true, needsLanguages = false } = {}) {
     out.push(`<div class="how">${paragraphs(step.how_this_works.replace(/\n/g, "\n\n"), "muted")}</div>`);
   }
   out.push(
-    `<div class="row footer">${button("Full test output", "key", "o")}` +
+    `<div class="row footer">${step.first ? "" : button("← Previous step", "key", "b")}` +
+      `${button("Full test output", "key", "o")}` +
       `${button("Show the guide's terminal", "terminal")}</div>`,
   );
   return out.join("\n");
