@@ -126,9 +126,24 @@ function problems(state) {
   );
 }
 
-function render(state, { trusted = true, needsLanguages = false } = {}) {
+// From a click on Start until the guide's first step is on screen. The shell
+// starting and the toolchain check take a few seconds, and without this the
+// panel looks as if nothing happened.
+function startingUp() {
+  return (
+    `<h2>Starting the guide…</h2>` +
+    `<p>It runs in the "Measure Twice guide" terminal. The first step shows ` +
+    `here in a moment.</p>` +
+    button("Show the guide's terminal", "terminal")
+  );
+}
+
+function render(state, { trusted = true, needsLanguages = false, starting = false } = {}) {
   if (!trusted) {
     return untrusted();
+  }
+  if (starting || (state && state.status === "starting")) {
+    return startingUp();
   }
   if (state && state.status === "problems") {
     return problems(state);

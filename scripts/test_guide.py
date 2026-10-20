@@ -604,6 +604,17 @@ class OpenLessonFilesTest(unittest.TestCase):
             guide.watch([], Progress())
         self.assertEqual(["setup", "stopped"], [s["status"] for s in published])
 
+    def test_the_panel_hears_the_guide_is_starting_before_the_toolchain_check(self):
+        published = []
+        with (
+            mock.patch.object(guide, "publish", side_effect=published.append),
+            mock.patch.object(guide, "ensure_ready", return_value=False),
+            mock.patch.object(guide, "doctor", return_value=[]),
+        ):
+            guide.watch([], Progress(languages=["rust"]))
+        self.assertEqual("starting", published[0]["status"])
+        self.assertEqual(os.getpid(), published[0]["pids"][0])
+
     def test_a_missing_toolchain_is_shown_in_the_panel(self):
         published = []
         with (

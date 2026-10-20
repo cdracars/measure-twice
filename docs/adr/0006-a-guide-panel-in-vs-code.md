@@ -38,7 +38,10 @@ tests and stub.
   stays in the background, with `GUIDE_PANEL=1` so the guide keeps that
   terminal's screen to a short status. The terminal is one click away for the
   full test output. If a toolchain is missing, the guide reports it to the
-  panel, since the learner may never look at the terminal.
+  panel, since the learner may never look at the terminal. Starting again
+  (a click on Start, or a reload) reuses that terminal if it's still open; a
+  click also brings it forward, and the panel says the guide is starting
+  until its first step is ready.
 - **One way to start.** The panel replaces an earlier first-terminal hook in
   `~/.bashrc`. In Restricted Mode terminals are blocked, so the panel explains
   that and waits for trust. The guide refuses to run while another guide is

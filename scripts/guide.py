@@ -985,8 +985,10 @@ def watch(exercises: list[Exercise], progress: Progress, open_files: bool = True
         return 1
     end: dict | None = None
     try:
-        if not progress.languages:
-            publish({"version": 1, "status": "setup", "pids": ancestor_pids()})
+        # Tell the panel straight away, so it can find this terminal and show the
+        # guide starting while the toolchains are checked.
+        status = "starting" if progress.languages else "setup"
+        publish({"version": 1, "status": status, "pids": ancestor_pids()})
         if not ensure_ready(progress):
             if progress.languages:  # a toolchain is missing: the panel shows what to fix
                 end = {"version": 1, "status": "problems", "problems": doctor(progress.languages)}
