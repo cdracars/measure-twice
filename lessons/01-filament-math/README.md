@@ -33,6 +33,11 @@ weight (g)               = volume (cm³) × density (g/cm³)
 Typical densities: PLA ≈ 1.24 g/cm³, PETG ≈ 1.27 g/cm³. Check your filament
 maker's data sheet for exact values.
 
+You don't need to type π in yourself: all four languages have it built in, as
+a constant more precise than 3.14159. Finding where each one keeps it is a row
+in [the comparison table](#whats-different-between-the-languages), and the
+guide's hints name it if you get stuck.
+
 ## Reading the tests
 
 Every test has the same three parts, whatever the language:
