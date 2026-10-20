@@ -4,7 +4,8 @@ Usage: ./scripts/guide [command]
 
   (no command)   show your current exercise and re-run its tests every time
                  you save. Keys (then Enter): h hint · e edit · r read the
-                 lesson README · o full output · d done (checklists) · q quit.
+                 lesson README · o full output · d done (checklists) · n next
+                 step, once this one is done · b back a step · q quit.
                  In VS Code's terminal (and Codespaces) each step opens the
                  lesson README and the file you edit; --no-open, or setting
                  GUIDE_NO_OPEN=1, turns that off. The VS Code guide panel
@@ -13,6 +14,7 @@ Usage: ./scripts/guide [command]
   status         what you've done and what's next
   hint           show the next hint for the current exercise
   done           confirm the current checklist exercise
+  next, back     move to the next exercise (once this one is done) or back one
   check          run the current exercise's tests once
   doctor         check your toolchains are installed and new enough
   verify         (for course authors) check every guided exercise; add
@@ -291,6 +293,7 @@ class Progress:
     done: set[str] = field(default_factory=set)
     hints: dict[str, int] = field(default_factory=dict)
     seen_red: set[str] = field(default_factory=set)
+    at: str | None = None  # the step the learner moved to with next or back
 
     @classmethod
     def load(cls, path: Path) -> Progress:
@@ -303,6 +306,7 @@ class Progress:
             done=set(data.get("done", [])),
             hints=data.get("hints", {}),
             seen_red=set(data.get("seen_red", [])),
+            at=data.get("at"),
         )
 
     def save(self, path: Path) -> None:
@@ -311,6 +315,7 @@ class Progress:
             "done": sorted(self.done),
             "hints": self.hints,
             "seen_red": sorted(self.seen_red),
+            "at": self.at,
         }
         path.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
 
@@ -335,17 +340,51 @@ def steps(exercises: list[Exercise], languages: list[str]) -> list[Step]:
 
 
 def current_step(exercises: list[Exercise], progress: Progress) -> Step | None:
-    for exercise, lang in steps(exercises, progress.languages):
-        if step_key(exercise, lang) not in progress.done:
-            return exercise, lang
-    return None
+    """The step the learner moved to, else the first one not done yet."""
+    all_steps = steps(exercises, progress.languages)
+    for step in all_steps:
+        if step_key(*step) == progress.at:
+            return step
+    return next((s for s in all_steps if step_key(*s) not in progress.done), None)
 
 
-def next_step_after(exercises: list[Exercise], progress: Progress, key: str) -> Step | None:
+def all_steps_done(exercises: list[Exercise], progress: Progress) -> bool:
+    return all(step_key(*s) in progress.done for s in steps(exercises, progress.languages))
+
+
+def neighbour(exercises: list[Exercise], progress: Progress, step: Step, by: int) -> Step | None:
+    """The step `by` places after this one (before, if negative), in course order."""
     all_steps = steps(exercises, progress.languages)
     keys = [step_key(*s) for s in all_steps]
-    after = all_steps[keys.index(key) + 1 :] if key in keys else all_steps
-    return next((s for s in after if step_key(*s) not in progress.done), None)
+    if step_key(*step) not in keys:
+        return None
+    index = keys.index(step_key(*step)) + by
+    return all_steps[index] if 0 <= index < len(keys) else None
+
+
+def move(exercises: list[Exercise], progress: Progress, by: int) -> str | None:
+    """Move to the next step (by=1) or back one (by=-1). Returns why not, if it can't.
+
+    Learners move on themselves: the guide stops on a finished step, so they can
+    read what passed before going on. Going back never undoes a step.
+    """
+    step = current_step(exercises, progress)
+    if step is None:  # everything is done
+        all_steps = steps(exercises, progress.languages)
+        if by > 0 or not all_steps:
+            return "Every guided step is done."
+        progress.at = step_key(*all_steps[-1])
+        progress.save(PROGRESS_FILE)
+        return None
+    if by > 0 and step_key(*step) not in progress.done:
+        return "Finish this step first. Its tests, or d for a checklist, decide when it's done."
+    target = neighbour(exercises, progress, step, by)
+    if target is None and by < 0:
+        return "This is the first step."
+    # Past the last step, fall back to the first one not done (or all done).
+    progress.at = step_key(*target) if target else None
+    progress.save(PROGRESS_FILE)
+    return None
 
 
 def parse_languages(text: str) -> list[str]:
@@ -584,7 +623,7 @@ HOW_THIS_WORKS = (
     "How this works: the ✗ lines below are tests failing on purpose, because the code"
     " isn't written yet. That's red.\n"
     "Read the lesson README and the tests, write the code, and save. When every test"
-    " passes (green), you move on.\n"
+    " passes (green), the step is done and you can move on.\n"
     "Stuck? Type h and press Enter for a hint."
 )
 
@@ -786,6 +825,9 @@ def panel_state(
             "next": next_action(exercise, language),
             "how_this_works": None if progress.done else HOW_THIS_WORKS,
             "checklist": list(exercise.checklist),
+            # A finished step stays on screen until the learner presses Next.
+            "done": key in progress.done,
+            "first": neighbour(exercises, progress, (exercise, language), -1) is None,
         },
         "files": {
             "readme": f"{lesson_dir}/README.md",
@@ -995,7 +1037,7 @@ def watch(exercises: list[Exercise], progress: Progress, open_files: bool = True
             return 1
         return watch_loop(exercises, progress, open_files)
     finally:
-        finished_all = bool(progress.languages) and current_step(exercises, progress) is None
+        finished_all = bool(progress.languages) and all_steps_done(exercises, progress)
         publish(end or {"version": 1, "status": "all-done" if finished_all else "stopped"})
 
 
@@ -1033,7 +1075,7 @@ def watch_loop(exercises: list[Exercise], progress: Progress, open_files: bool) 
     last = Run(False, "", "")
     opened: str | None = None
     files_open = False
-    keys = "h hint · e edit · r README · o full output · d done · q quit  (then Enter)"
+    keys = "h hint · e edit · r README · o full output · d done · n next · b back · q quit  (then Enter)"
     while True:
         step = current_step(exercises, progress)
         if step is None:
@@ -1061,6 +1103,10 @@ def watch_loop(exercises: list[Exercise], progress: Progress, open_files: bool) 
                 print(dim("Running the tests..."))
             publish(panel_state(exercise, language, progress, exercises, None, files_open))
             last = check_step(exercise, language, progress)
+            if last.complete:
+                # Stay on the finished step until the learner presses n.
+                progress.at = shown
+                progress.save(PROGRESS_FILE)
             clear_screen()
             if brief:
                 print(brief_screen(exercise, language, progress, exercises, last))
@@ -1068,10 +1114,10 @@ def watch_loop(exercises: list[Exercise], progress: Progress, open_files: bool) 
                 print(describe(exercise, language, progress, exercises, files_open))
                 print(last.text)
             publish(panel_state(exercise, language, progress, exercises, last, files_open))
-            if last.complete:
-                print("\n" + finished(exercise, current_step(exercises, progress)))
-                time.sleep(2.5)
-                continue
+            if shown in progress.done:
+                upcoming = neighbour(exercises, progress, step, 1)
+                print("\n" + finished(exercise, upcoming))
+                print(bold("Press n, then Enter, for the next step."))
             print("\n" + dim(f"Save a file to re-run · {keys}"))
         key = read_key(0.5)
         if key == "q":
@@ -1088,8 +1134,16 @@ def watch_loop(exercises: list[Exercise], progress: Progress, open_files: bool) 
         elif key == "o":
             print(tail(last.output))
         elif key == "d":
-            confirm(exercise, language, progress)
+            # Pressing d is the learner moving on, so a confirmed step goes straight on.
+            if confirm(exercise, language, progress):
+                move(exercises, progress, 1)
             shown = None
+        elif key in ("n", "b"):
+            problem = move(exercises, progress, 1 if key == "n" else -1)
+            if problem:
+                print(problem)
+            else:
+                shown = None
 
 
 def show_hint(exercise: Exercise, language: str, progress: Progress) -> None:
@@ -1104,18 +1158,21 @@ def show_hint(exercise: Exercise, language: str, progress: Progress) -> None:
     print(cyan(f"Hint {shown + 1} of {len(exercise.hints)}: {text}"))
 
 
-def confirm(exercise: Exercise, language: str, progress: Progress) -> None:
+def confirm(exercise: Exercise, language: str, progress: Progress) -> bool:
+    """Mark a checklist or reading step done. Returns whether it was."""
     if exercise.kind not in ("confirm", "read"):
         print("This step finishes by itself when its tests pass.")
-        return
+        return False
     if exercise.kind == "confirm":
         results, _ = run_tests(exercise.lesson, language)
         if not evaluate(exercise, results).passed:
             print(red("Get the tests passing first, then confirm."))
-            return
+            return False
     progress.done.add(step_key(exercise, language))
     progress.save(PROGRESS_FILE)
-    print(finished(exercise, current_step(load_exercises(ROOT), progress)))
+    upcoming = neighbour(load_exercises(ROOT), progress, (exercise, language), 1)
+    print(finished(exercise, upcoming))
+    return True
 
 
 def status(exercises: list[Exercise], progress: Progress) -> None:
@@ -1219,6 +1276,13 @@ def main(argv: list[str]) -> int:
 
     if not ensure_ready(progress):
         return 1
+    if command in ("next", "back"):
+        problem = move(exercises, progress, 1 if command == "next" else -1)
+        if problem:
+            print(problem)
+            return 1
+        status(exercises, progress)
+        return 0
     step = current_step(exercises, progress)
     if step is None:
         print(all_done_message())
@@ -1228,14 +1292,15 @@ def main(argv: list[str]) -> int:
         show_hint(exercise, language, progress)
         return 0
     if command == "done":
-        confirm(exercise, language, progress)
+        if confirm(exercise, language, progress):
+            move(exercises, progress, 1)
         return 0
     if command == "check":
         print(describe(exercise, language, progress, exercises))
         run = check_step(exercise, language, progress)
         print(run.text)
         if run.complete:
-            print("\n" + finished(exercise, current_step(exercises, progress)))
+            print("\n" + finished(exercise, neighbour(exercises, progress, step, 1)))
         return 0 if run.complete else 1
 
     print(f"Unknown command: {command}\n")

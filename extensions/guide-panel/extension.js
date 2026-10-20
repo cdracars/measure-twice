@@ -188,6 +188,7 @@ class GuidePanel {
   .bar { height: 4px; background: var(--vscode-editorWidget-border, rgba(128,128,128,0.3)); border-radius: 2px; }
   .bar div { height: 100%; background: var(--vscode-progressBar-background); border-radius: 2px; }
   .intro { border-left: 3px solid var(--vscode-textLink-foreground); padding: 2px 10px; margin: 0.8em 0; background: var(--vscode-textBlockQuote-background); }
+  .done { padding: 4px 10px; margin: 0.6em 0; border-left: 3px solid var(--vscode-testing-iconPassed); background: var(--vscode-textBlockQuote-background); }
   .next { font-weight: 600; padding: 8px 10px; border-radius: 4px; background: var(--vscode-textBlockQuote-background); }
   .row { display: flex; flex-wrap: wrap; gap: 6px; margin: 0.6em 0; }
   button { font: inherit; color: var(--vscode-button-foreground); background: var(--vscode-button-background); border: none; border-radius: 3px; padding: 4px 10px; cursor: pointer; }

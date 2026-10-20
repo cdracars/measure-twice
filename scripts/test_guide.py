@@ -379,10 +379,52 @@ class ProgressTest(unittest.TestCase):
         progress = Progress(languages=["php"], done={"01.1:php", "01.2:php"})
         self.assertIsNone(guide.current_step(list(self.exercises), progress))
 
+    def test_the_step_the_learner_moved_to_wins_over_the_first_not_done(self):
+        progress = Progress(languages=["php"], done={"01.1:php"}, at="01.1:php")
+        current = guide.current_step(list(self.exercises), progress)
+        assert current is not None
+        self.assertEqual("01.1:php", guide.step_key(*current))
+
+    def move(self, progress, by):
+        with (
+            tempfile.TemporaryDirectory() as temp,
+            mock.patch.object(guide, "PROGRESS_FILE", Path(temp) / "progress.json"),
+        ):
+            return guide.move(list(self.exercises), progress, by)
+
+    def current_key(self, progress):
+        current = guide.current_step(list(self.exercises), progress)
+        return current and guide.step_key(*current)
+
+    def test_next_only_moves_on_from_a_done_step(self):
+        progress = Progress(languages=["php"])
+        self.assertIn("Finish this step first", self.move(progress, 1))
+        self.assertEqual("01.1:php", self.current_key(progress))
+        progress.done.add("01.1:php")
+        progress.at = "01.1:php"  # the watch loop stays on a step it just finished
+        self.assertIsNone(self.move(progress, 1))
+        self.assertEqual("01.2:php", self.current_key(progress))
+
+    def test_back_goes_to_the_previous_step_and_keeps_it_done(self):
+        progress = Progress(languages=["php"], done={"01.1:php"})
+        self.assertIsNone(self.move(progress, -1))
+        self.assertEqual("01.1:php", self.current_key(progress))
+        self.assertIn("01.1:php", progress.done)
+        self.assertEqual("This is the first step.", self.move(progress, -1))
+
+    def test_back_from_the_end_reopens_the_last_step(self):
+        progress = Progress(languages=["php"], done={"01.1:php", "01.2:php"})
+        self.assertIsNone(self.move(progress, -1))
+        self.assertEqual("01.2:php", self.current_key(progress))
+        self.assertIsNone(self.move(progress, 1))
+        self.assertIsNone(self.current_key(progress))
+
     def test_progress_round_trips_through_a_file(self):
         with tempfile.TemporaryDirectory() as temp:
             path = Path(temp) / "progress.json"
-            progress = Progress(languages=["ts"], done={"01.1:ts"}, hints={"01.2:ts": 2})
+            progress = Progress(
+                languages=["ts"], done={"01.1:ts"}, hints={"01.2:ts": 2}, at="01.1:ts"
+            )
             progress.save(path)
             self.assertEqual(progress, Progress.load(path))
 
@@ -526,6 +568,24 @@ class OpenLessonFilesTest(unittest.TestCase):
 
     def code_calls(self) -> list[list[str]]:
         return [c.args[0] for c in self.code.call_args_list if c.args[0][0] == "code"]
+
+    def test_a_finished_step_stays_until_the_learner_presses_n(self):
+        first = exercise(files=PHP_FILES)
+        second = exercise(number=2, title="Length from a weight", files=PHP_FILES)
+        passing = [TestResult("one metre weighs about 3 g", True)]
+        published = []
+        with (
+            mock.patch.dict(os.environ, {}, clear=True),
+            mock.patch.object(guide, "publish", side_effect=published.append),
+            mock.patch.object(guide, "watched_files", return_value={Path("f"): 0}),
+            mock.patch.object(guide, "run_tests", return_value=(passing, "")),
+            mock.patch.object(guide, "read_key", side_effect=[None, None, "n", None, "q"]),
+        ):
+            guide.watch([first, second], Progress(languages=["php"]))
+        shown = [
+            (s["step"]["title"], s["step"]["done"]) for s in published if s["status"] == "ready"
+        ]
+        self.assertEqual([("Weight from a length", True), ("Length from a weight", True)], shown)
 
     def test_a_step_opens_the_stub_and_tests_then_the_readme_so_the_readme_shows(self):
         self.watch([])

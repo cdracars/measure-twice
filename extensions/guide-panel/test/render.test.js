@@ -128,6 +128,23 @@ test("a read step has its checklist and a done button that types d", () => {
   assert.match(html, /data-action="key" data-value="d"/);
 });
 
+test("a finished step shows a green check and a Next button that types n", () => {
+  const html = render(state({ step: { ...state().step, kind: "check", done: true } }));
+  assert.match(html, /This step is done/);
+  assert.match(html, /data-action="key" data-value="n"/);
+  assert.doesNotMatch(render(state()), /data-value="n"/);
+});
+
+test("a finished read step drops its done button", () => {
+  const html = render(state({ step: { ...state().step, done: true } }));
+  assert.doesNotMatch(html, /data-value="d"/);
+});
+
+test("every step but the first can go back", () => {
+  assert.match(render(state()), /data-action="key" data-value="b"/);
+  assert.doesNotMatch(render(state({ step: { ...state().step, first: true } })), /data-value="b"/);
+});
+
 test("a check step has no done button", () => {
   const html = render(state({ step: { ...state().step, kind: "check", checklist: [] } }));
   assert.doesNotMatch(html, /data-value="d"/);
